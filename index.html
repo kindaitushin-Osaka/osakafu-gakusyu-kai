@@ -234,6 +234,24 @@
     .faq-card.open .faq-answer { display: block; }
 
     .member-card .name { font-weight: 900; font-size: 17px; color: var(--blue-dark); }
+    .member-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    #7488ec,
+    #d7ecf3
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  color: white;
+  margin: 0 auto 14px;
+  box-shadow:
+    0 4px 12px rgba(59,110,165,.25);
+}
 
     aside .number { font-size: 38px; font-weight: 900; color: var(--blue); line-height: 1; }
     .side-link { text-decoration: none; color: var(--ink); display: block; }
@@ -262,6 +280,49 @@
       nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
       nav button { white-space: nowrap; }
     }
+@media (max-width: 768px) {
+  .wrap {
+    display: block;
+    padding: 12px;
+  }
+
+  main {
+    width: 100%;
+  }
+
+  aside {
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .header-inner {
+    display: block;
+  }
+
+  nav {
+    margin-top: 12px;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 8px;
+  }
+
+  nav button {
+    flex: 0 0 auto;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .form-row {
+    display: block;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}    
   </style>
 </head>
 <body>
@@ -344,16 +405,99 @@
       <section id="membersTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
-          <div class="card" style="margin-bottom:16px;">
-            <div class="form-row">
-              <div class="form-group"><label>ニックネーム（必須）</label><input id="memberName" placeholder="例：なお" /></div>
-              <div class="form-group"><label>得意科目</label><input id="memberSubject" placeholder="例：民法・英語" /></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>勉強スタイル</label><select id="memberStyle"><option>朝型</option><option>夜型</option><option>週末集中</option></select></div>
-              <div class="form-group"><label>一言コメント</label><input id="memberComment" placeholder="例：レポート頑張っています" /></div>
-            </div>
-            <button class="btn" onclick="addMember()">自己紹介を登録する</button>
+ <div class="card" style="margin-bottom:16px;">
+
+  <div class="form-row">
+
+    <div class="form-group">
+      <label>ニックネーム（必須）</label>
+      <input
+        id="memberName"
+        placeholder="例：なお"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>得意科目</label>
+      <input
+        id="memberSubject"
+        placeholder="例：民法・英語"
+      />
+    </div>
+
+  </div>
+
+  <div class="form-row">
+
+    <div class="form-group">
+
+      <label>勉強スタイル</label>
+
+      <select id="memberStyle">
+
+        <option>朝型</option>
+        <option>夜型</option>
+        <option>週末集中</option>
+
+      </select>
+
+    </div>
+
+    <div class="form-group">
+
+      <label>学年</label>
+
+      <select id="memberGrade">
+
+        <option value="1年">1年</option>
+        <option value="2年">2年</option>
+        <option value="3年">3年</option>
+        <option value="4年">4年</option>
+        <option value="履修生">履修生</option>
+        <option value="卒業生">卒業生</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <div class="form-group">
+
+    <label>アイコン</label>
+
+    <select id="memberIcon">
+
+    <option value="📖">📖 勉強</option>
+    <option value="⚖️">⚖️ 法律</option>
+    <option value="🌸">🌸 花</option>
+    <option value="😸">😸 猫</option>
+    <option value="🐶">🐶 犬</option>
+    <option value="🐰">🐰 うさぎ</option>
+    <option value="⭐">⭐ 星</option>
+    <option value="😊">😊 にこにこ</option>
+  　<option value="🎓">🎓 学生</option>
+
+    </select>
+
+  </div>
+
+  <div class="form-group">
+
+    <label>一言コメント</label>
+
+    <input
+      id="memberComment"
+      placeholder="例：レポート頑張っています"
+    />
+
+  </div>
+
+  <button
+    class="btn"
+    onclick="addMember()"
+  > 
+          自己紹介を登録する</button>
           </div>
           <div id="memberList" class="grid grid-2"></div>
         </div>
@@ -437,8 +581,8 @@
         contactHours: "月～金曜日　9：00～17：00　土日・祝日閉室"
       },
       notices: [
-        { title: "レポート提出期限について", body: "今月のレポート提出締切は15日です。提出漏れにご注意ください。", type: "重要", pinned: true, formUrl: "", created: "2026/05/08" },
-        { title: "オンライン勉強会開催", body: "行政法の試験対策勉強会をZoomで開催します。", type: "イベント", pinned: false, formUrl: "https://forms.google.com/", created: "2026/05/08" },
+        { title: "科目終末試験申し込み", body: "5月６日～５月１２日の間にクレドから申し込みしてください。", type: "重要", pinned: true, formUrl: "", created: "2026/05/08" },
+        { title: "オンライン勉強会開催", body: "試験対策勉強会をZoomで開催します。", type: "イベント", pinned: false, formUrl: "https://forms.google.com/", created: "2026/05/08" },
         { title: "共有フォルダを更新しました", body: "英語・法学の資料を追加しました。", type: "お知らせ", pinned: false, formUrl: "", created: "2026/05/08" }
       ],
       boardPosts: [
@@ -446,9 +590,9 @@
         { category: "情報共有", title: "参考文献の探し方", body: "図書館サイトとCiNiiを併用すると見つけやすかったです。", author: "メンバー", likes: 4, solved: true, stamps: {"👍":3,"😊":1,"🎉":1,"💪":0}, replies: [] }
       ],
       schedules: [
-        { date: "2026-05-20", title: "行政法勉強会", place: "オンライン", type: "勉強会", participants: 5, joined: false },
+        { date: "2026-05-20", title: "レポートの書き方勉強会", place: "オンライン", type: "勉強会", participants: 5, joined: false },
         { date: "2026-05-25", title: "交流会", place: "大阪市内", type: "交流会", participants: 8, joined: false },
-        { date: "2026-06-01", title: "単位認定試験確認日", place: "各自", type: "試験", participants: 3, joined: false }
+        { date: "2026-06-01", title: "オンデマンドが始まります", place: "各自", type: "試験", participants: 3, joined: false }
       ],
       faqs: [
         { category: "履修", q: "履修登録はいつ確認すればよいですか？", a: "年度・学期ごとの案内を大学公式サイトで確認してください。" },
@@ -465,8 +609,22 @@
         { category: "サークルについて", q: "資料は誰が更新しますか？", a: "運営メンバーがGoogle Driveと管理ページを使って更新する想定です。" }
       ],
       members: [
-        { name: "なお", comment: "レポートと仕事の両立を頑張っています。", subject: "民法・英語", style: "週末集中" },
-        { name: "そら", comment: "試験前のもくもく会が好きです。", subject: "憲法", style: "朝型" }
+        {   
+  name: "なお",
+  icon: "⚖️",
+  comment: "レポートと仕事の両立を頑張っています。",
+  subject: "民法・英語",
+  style: "週末集中",
+  grade: "2年"
+},
+        {
+  name: "そら",
+  icon: "📚",
+  comment: "試験前のもくもく会が好きです。",
+  subject: "憲法",
+  style: "朝型",
+  grade: "1年"
+}
       ]
     };
 
@@ -584,8 +742,55 @@
     function renderMaterials() {
       document.getElementById("driveLink").href = data.settings.driveUrl;
       document.getElementById("driveDescription").textContent = data.settings.driveDesc;
-      const links = ["学習の友", "梅信", "シラバス", "大学公式サイト"];
-      document.getElementById("universityLinks").innerHTML = links.map(x => `<a class="link-card side-link" href="#"><strong>🎓 ${x}</strong><div class="muted">大学公式ページへ</div></a>`).join("");
+ const links = [
+
+  {
+    name: "KULeD",
+    url: "https://kuled.kindai.ac.jp/"
+  },
+
+  {
+    name: "梅信",
+    url: "https://www.kindai.ac.jp/tsushin/for-students/baishin/"
+  },
+
+  {
+    name: "年間スケジュール",
+    url: "https://www.kindai.ac.jp/tsushin/files/schedule/schedule_2026.pdf/"
+  },
+
+  {
+    name: "大学公式サイト",
+    url: "https://www.kindai.ac.jp/tsushin/"
+  }
+
+];
+
+document.getElementById(
+  "universityLinks"
+).innerHTML =
+
+  links.map(x => `
+
+    <a
+      class="link-card side-link"
+      href="${x.url}"
+      target="_blank"
+    >
+
+      <strong>
+        🎓 ${x.name}
+      </strong>
+
+      <div class="muted">
+        👆
+      </div>
+
+    </a>
+
+  `).join("");
+  
+
       document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x => `<a class="sidebar-item side-link" href="#">${x}</a>`).join("");
     }
 
@@ -597,15 +802,145 @@
     function addMember() {
       const name = document.getElementById("memberName").value.trim();
       if (!name) return alert("ニックネームを入力してください");
-      data.members.unshift({ name, comment: document.getElementById("memberComment").value.trim(), subject: document.getElementById("memberSubject").value.trim(), style: document.getElementById("memberStyle").value });
-      ["memberName","memberComment","memberSubject"].forEach(id => document.getElementById(id).value = "");
-      saveData();
-    }
+      data.members.unshift({
 
-    function renderMembers() {
-      document.getElementById("memberCount").textContent = data.members.length;
-      document.getElementById("memberList").innerHTML = data.members.map(m => `<div class="member-card"><div class="name">${escapeHTML(m.name)}</div><div class="muted">得意科目：${escapeHTML(m.subject || "未入力")}</div><div class="muted">勉強スタイル：${escapeHTML(m.style)}</div><p style="margin-top:8px;">${escapeHTML(m.comment || "よろしくお願いします。")}</p></div>`).join("");
-    }
+  name,
+
+  icon:
+    document.getElementById("memberIcon").value,
+
+  comment:
+    document.getElementById("memberComment").value.trim(),
+
+  subject:
+    document.getElementById("memberSubject").value.trim(),
+
+  style:
+    document.getElementById("memberStyle").value
+
+});
+["memberName", "memberComment", "memberSubject"]
+  .forEach(id =>
+    document.getElementById(id).value = ""
+  );
+
+saveData();
+
+}
+function editMember(index) {
+
+  const m = data.members[index];
+
+  const newGrade = prompt(
+    "学年を入力してください",
+    m.grade || ""
+  );
+
+  if (newGrade === null) return;
+
+  const newComment = prompt(
+    "コメントを編集してください",
+    m.comment || ""
+  );
+
+  if (newComment === null) return;
+
+  m.grade = newGrade;
+  m.comment = newComment;
+
+  saveData();
+}
+
+function deleteMember(index) {
+
+  if (
+    !confirm(
+      "このメンバーを削除しますか？"
+    )
+  )
+    return;
+
+  data.members.splice(index, 1);
+
+  saveData();
+}
+
+function renderMembers() {
+
+  document.getElementById("memberCount").textContent =
+    data.members.length;
+
+  document.getElementById("memberList").innerHTML =
+    data.members.map((m, index) => `
+
+      <div class="member-card">
+
+        <div class="member-icon">
+          ${escapeHTML(m.icon || "👤")}
+        </div>
+
+        <div class="name">
+          ${escapeHTML(m.name)}
+        </div>
+
+        <div class="muted">
+          得意科目：
+          ${escapeHTML(m.subject || "未入力")}
+        </div>
+
+        <div class="muted">
+          勉強スタイル：
+          ${escapeHTML(m.style)}
+        </div>
+<div class="muted">
+  🎓 学年：
+  ${escapeHTML(m.grade || "未設定")}
+</div>
+        <p style="margin-top:8px;">
+          ${escapeHTML(
+            m.comment || "よろしくお願いします。"
+          )}
+        </p>
+
+        ${
+  document.getElementById(
+    "adminPanel"
+  )?.style.display === "grid"
+
+  ? `
+
+  <div
+    style="
+      display:flex;
+      gap:8px;
+      margin-top:12px;
+    "
+  >
+
+    <button
+      class="btn btn-light btn-small"
+      onclick="editMember(${index})"
+    >
+      編集
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="deleteMember(${index})"
+    >
+      削除
+    </button>
+
+  </div>
+
+  `
+
+  : ""
+}
+      </div>
+
+    `).join("");
+}
 
     function renderContact() {
       const html = `メール：${escapeHTML(data.settings.contactEmail)}<br>TEL：${escapeHTML(data.settings.contactTel)}<br>受付時間：${escapeHTML(data.settings.contactHours)}`;
@@ -617,13 +952,26 @@
       document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `<div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}</div>`).join("");
     }
 
-    function loginAdmin() {
-      if (document.getElementById("adminPass").value !== "admin1234") return alert("パスワードが違います");
-      document.getElementById("adminLogin").style.display = "none";
-      document.getElementById("adminPanel").style.display = "grid";
-      fillAdminSettings();
-      renderAdminLists();
-    }
+   function loginAdmin() {
+
+  if (
+    document.getElementById("adminPass").value
+    !== "admin1234"
+  )
+    return alert("パスワードが違います");
+
+  document.getElementById("adminLogin")
+    .style.display = "none";
+
+  document.getElementById("adminPanel")
+    .style.display = "grid";
+
+  renderMembers();
+
+  fillAdminSettings();
+
+  renderAdminLists();
+}
 
     function todayStr() { const d = new Date(); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; }
     function addNotice() {
@@ -779,3 +1127,5 @@ z-index:9999;
 </div>
 </body>
 </html>
+
+
