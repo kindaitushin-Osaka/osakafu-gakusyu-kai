@@ -134,6 +134,7 @@ window.addEventListener("load", () => {
   // onAuthStateChangedは即座に開始
   console.log("onAuthStateChanged開始");
   onAuthStateChanged(auth, (user) => {
+     console.log("onAuthStateChangedコールバック:", user ? user.email : "未ログイン");
     if (user) {
       console.log("ログイン中:", user.email);
       const emailDisplay = document.getElementById("userEmailDisplay");
