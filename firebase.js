@@ -426,3 +426,6 @@ window.addEventListener("load", () => {
 });
 
 console.log("firebase.js 読込OK");
+
+
+console.log("firebase.js 読込OK");
