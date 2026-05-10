@@ -1,141 +1,428 @@
-// =================================================================
-// index.html 修正パッチ ― スケジュール・FAQ Firebase連携
-// =================================================================
-// 以下の手順で修正してください。
-//
-// 【手順1】window公開に2行追加（renderAll()の直前）
-// 【手順2】addSchedule() を置き換え
-// 【手順3】deleteSchedule() を置き換え
-// 【手順4】joinSchedule() を置き換え
-// 【手順5】addFaq() を置き換え
-// 【手順6】deleteFaq() を置き換え
-// =================================================================
+// ============================================================
+// firebase.js  ―  最終完全版
+// 対応機能：
+//   掲示板：投稿・いいね・スタンプ・返信・解決済み
+//   お知らせ：保存・削除・リアルタイム同期
+//   メンバー：登録・削除・編集・リアルタイム同期
+//   スケジュール：追加・削除・参加・リアルタイム同期
+//   FAQ：追加・削除・リアルタイム同期
+// ============================================================
 
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
-// ----------------------------------------------------------------
-// 【手順1】renderAll() の直前にある window 公開部分に2行追加
-// ----------------------------------------------------------------
-//
-// 現在こうなっているはず：
-//   window.data = data;
-//   window.renderBoard = renderBoard;
-//   window.renderNotices = renderNotices;
-//   window.renderMembers = renderMembers;
-//   renderAll();
-//
-// ↓ 以下2行を追加する
-//   window.renderSchedules = renderSchedules;  ← 追加
-//   window.renderSideEvents = renderSideEvents; ← 追加
-//   window.renderFaq = renderFaq;              ← 追加
-//   renderAll();
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+  increment,
+  serverTimestamp,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// ── Firebase 設定 ─────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyA_0qj3n_4eoARjDTO1jdWRXmYNE7HZRrk",
+  authDomain:        "osaka-info-gakusyukai.firebaseapp.com",
+  projectId:         "osaka-info-gakusyukai",
+  storageBucket:     "osaka-info-gakusyukai.firebasestorage.app",
+  messagingSenderId: "222261320673",
+  appId:             "1:222261320673:web:896e9b0eea9d074d7990a0",
+  measurementId:     "G-DFJ1VJVVD2"
+};
 
-// ----------------------------------------------------------------
-// 【手順2】addSchedule() を丸ごと置き換え
-// ----------------------------------------------------------------
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+console.log("Firebase 接続OK");
 
-function addSchedule() {
-  const date  = document.getElementById("adminScheduleDate").value;
-  const title = document.getElementById("adminScheduleTitle").value.trim();
-  if (!date || !title) return alert("日付とタイトルを入力してください");
+// ── docId マップ（ローカルindex ↔ Firestore docId） ────────
+let boardIdMap    = {};
+let noticeIdMap   = {};
+let memberIdMap   = {};
+let scheduleIdMap = {};
+let faqIdMap      = {};
 
-  const schedule = {
-    date,
-    title,
-    place : document.getElementById("adminSchedulePlace").value.trim(),
-    type  : document.getElementById("adminScheduleType").value,
-    participants: 0,
-    joined: false
-  };
+// ============================================================
+// 【掲示板】
+// ============================================================
 
-  data.schedules.push(schedule);
-
-  // Firestore へ保存
-  if (typeof window.firebaseSaveSchedule === "function") {
-    window.firebaseSaveSchedule(schedule);
+window.firebaseSaveBoardPost = async function (post) {
+  try {
+    await addDoc(collection(db, "boardPosts"), {
+      category : post.category,
+      title    : post.title,
+      body     : post.body,
+      author   : post.author,
+      likes    : 0,
+      solved   : false,
+      stamps   : post.stamps,
+      created  : serverTimestamp()
+    });
+    console.log("掲示板投稿保存OK");
+  } catch (err) {
+    console.error("掲示板投稿保存失敗:", err);
   }
+};
 
-  ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"]
-    .forEach(id => document.getElementById(id).value = "");
+window.firebaseLikePost = async function (localIndex) {
+  const docId = boardIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "boardPosts", docId), { likes: increment(1) });
+    console.log("いいね更新OK");
+  } catch (err) {
+    console.error("いいね更新失敗:", err);
+  }
+};
 
-  saveData();
-  renderAdminLists();
+window.firebaseStampPost = async function (localIndex, stampKey) {
+  const docId = boardIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "boardPosts", docId), {
+      [`stamps.${stampKey}`]: increment(1)
+    });
+    console.log("スタンプ更新OK:", stampKey);
+  } catch (err) {
+    console.error("スタンプ更新失敗:", err);
+  }
+};
+
+window.firebaseToggleSolved = async function (localIndex, newValue) {
+  const docId = boardIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "boardPosts", docId), { solved: newValue });
+    console.log("解決済み更新OK:", newValue);
+  } catch (err) {
+    console.error("解決済み更新失敗:", err);
+  }
+};
+
+window.firebaseAddReply = async function (localIndex, replyText) {
+  const docId = boardIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await addDoc(
+      collection(db, "boardPosts", docId, "replies"),
+      { text: replyText, created: serverTimestamp() }
+    );
+    console.log("返信保存OK");
+  } catch (err) {
+    console.error("返信保存失敗:", err);
+  }
+};
+
+async function initBoardListener() {
+  const q = query(collection(db, "boardPosts"), orderBy("created", "desc"));
+  onSnapshot(q, async (snapshot) => {
+    const posts = [];
+    boardIdMap = {};
+    for (let i = 0; i < snapshot.docs.length; i++) {
+      const d   = snapshot.docs[i];
+      const raw = d.data();
+      let replies = [];
+      try {
+        const rSnap = await getDocs(
+          query(collection(db, "boardPosts", d.id, "replies"), orderBy("created", "asc"))
+        );
+        replies = rSnap.docs.map(r => r.data().text);
+      } catch (_) {}
+      posts.push({
+        category : raw.category || "質問",
+        title    : raw.title    || "",
+        body     : raw.body     || "",
+        author   : raw.author   || "匿名",
+        likes    : raw.likes    || 0,
+        solved   : raw.solved   || false,
+        stamps   : raw.stamps   || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
+        replies  : replies
+      });
+      boardIdMap[i] = d.id;
+    }
+    if (window.data && window.renderBoard) {
+      window.data.boardPosts = posts;
+      window.renderBoard();
+      console.log(`掲示板を同期: ${posts.length}件`);
+    }
+  }, (err) => console.error("掲示板onSnapshotエラー:", err));
 }
 
+// ============================================================
+// 【お知らせ】
+// ============================================================
 
-// ----------------------------------------------------------------
-// 【手順3】deleteSchedule() を丸ごと置き換え
-// ----------------------------------------------------------------
-
-function deleteSchedule(i) {
-  // Firestore から削除
-  if (typeof window.firebaseDeleteSchedule === "function") {
-    window.firebaseDeleteSchedule(i);
+window.firebaseSaveNotice = async function (notice) {
+  try {
+    await addDoc(collection(db, "notices"), {
+      title    : notice.title,
+      body     : notice.body,
+      type     : notice.type,
+      pinned   : notice.pinned,
+      formUrl  : notice.formUrl || "",
+      created  : notice.created || "",
+      createdAt: serverTimestamp()
+    });
+    console.log("お知らせ保存OK");
+  } catch (err) {
+    console.error("お知らせ保存失敗:", err);
   }
-  data.schedules.splice(i, 1);
-  saveData();
-  renderAdminLists();
+};
+
+window.firebaseDeleteNotice = async function (localIndex) {
+  const docId = noticeIdMap[localIndex];
+  if (!docId) { console.warn("お知らせdocId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "notices", docId));
+    console.log("お知らせ削除OK");
+  } catch (err) {
+    console.error("お知らせ削除失敗:", err);
+  }
+};
+
+function initNoticeListener() {
+  const q = query(collection(db, "notices"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    const notices = [];
+    noticeIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      notices.push({
+        title   : raw.title   || "",
+        body    : raw.body    || "",
+        type    : raw.type    || "お知らせ",
+        pinned  : raw.pinned  || false,
+        formUrl : raw.formUrl || "",
+        created : raw.created || ""
+      });
+      noticeIdMap[i] = d.id;
+    });
+    if (window.data && window.renderNotices) {
+      window.data.notices = notices;
+      window.renderNotices();
+      console.log(`お知らせを同期: ${notices.length}件`);
+    }
+  }, (err) => console.error("お知らせonSnapshotエラー:", err));
 }
 
+// ============================================================
+// 【メンバー】
+// ============================================================
 
-// ----------------------------------------------------------------
-// 【手順4】joinSchedule() を丸ごと置き換え
-// ----------------------------------------------------------------
-
-function joinSchedule(i) {
-  if (data.schedules[i].joined) return;
-  data.schedules[i].participants++;
-  data.schedules[i].joined = true;
-
-  // Firestore の参加人数を+1
-  if (typeof window.firebaseJoinSchedule === "function") {
-    window.firebaseJoinSchedule(i);
+window.firebaseSaveMember = async function (member) {
+  try {
+    await addDoc(collection(db, "members"), {
+      name     : member.name,
+      icon     : member.icon    || "👤",
+      comment  : member.comment || "",
+      subject  : member.subject || "",
+      style    : member.style   || "",
+      grade    : member.grade   || "",
+      createdAt: serverTimestamp()
+    });
+    console.log("メンバー保存OK");
+  } catch (err) {
+    console.error("メンバー保存失敗:", err);
   }
+};
 
-  saveData();
+window.firebaseDeleteMember = async function (localIndex) {
+  const docId = memberIdMap[localIndex];
+  if (!docId) { console.warn("メンバーdocId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "members", docId));
+    console.log("メンバー削除OK");
+  } catch (err) {
+    console.error("メンバー削除失敗:", err);
+  }
+};
+
+window.firebaseUpdateMember = async function (localIndex, updatedData) {
+  const docId = memberIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "members", docId), updatedData);
+    console.log("メンバー更新OK");
+  } catch (err) {
+    console.error("メンバー更新失敗:", err);
+  }
+};
+
+function initMemberListener() {
+  const q = query(collection(db, "members"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    const members = [];
+    memberIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      members.push({
+        name    : raw.name    || "",
+        icon    : raw.icon    || "👤",
+        comment : raw.comment || "",
+        subject : raw.subject || "",
+        style   : raw.style   || "",
+        grade   : raw.grade   || ""
+      });
+      memberIdMap[i] = d.id;
+    });
+    if (window.data && window.renderMembers) {
+      window.data.members = members;
+      window.renderMembers();
+      console.log(`メンバーを同期: ${members.length}件`);
+    }
+  }, (err) => console.error("メンバーonSnapshotエラー:", err));
 }
 
+// ============================================================
+// 【スケジュール】← 今回新規追加
+// ============================================================
 
-// ----------------------------------------------------------------
-// 【手順5】addFaq() を丸ごと置き換え
-// ----------------------------------------------------------------
-
-function addFaq() {
-  const q = document.getElementById("adminFaqQuestion").value.trim();
-  const a = document.getElementById("adminFaqAnswer").value.trim();
-  if (!q || !a) return alert("質問と回答を入力してください");
-
-  const faq = {
-    category: document.getElementById("adminFaqCategory").value,
-    q,
-    a
-  };
-
-  data.faqs.push(faq);
-
-  // Firestore へ保存
-  if (typeof window.firebaseSaveFaq === "function") {
-    window.firebaseSaveFaq(faq);
+// スケジュール保存
+window.firebaseSaveSchedule = async function (schedule) {
+  try {
+    await addDoc(collection(db, "schedules"), {
+      date        : schedule.date,
+      title       : schedule.title,
+      place       : schedule.place  || "",
+      type        : schedule.type   || "勉強会",
+      participants: 0,
+      createdAt   : serverTimestamp()
+    });
+    console.log("スケジュール保存OK");
+  } catch (err) {
+    console.error("スケジュール保存失敗:", err);
   }
+};
 
-  ["adminFaqQuestion","adminFaqAnswer"]
-    .forEach(id => document.getElementById(id).value = "");
+// スケジュール削除
+window.firebaseDeleteSchedule = async function (localIndex) {
+  const docId = scheduleIdMap[localIndex];
+  if (!docId) { console.warn("スケジュールdocId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "schedules", docId));
+    console.log("スケジュール削除OK");
+  } catch (err) {
+    console.error("スケジュール削除失敗:", err);
+  }
+};
 
-  saveData();
-  renderAdminLists();
+// スケジュール参加（参加人数を+1）
+window.firebaseJoinSchedule = async function (localIndex) {
+  const docId = scheduleIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "schedules", docId), {
+      participants: increment(1)
+    });
+    console.log("参加登録OK");
+  } catch (err) {
+    console.error("参加登録失敗:", err);
+  }
+};
+
+// スケジュールリアルタイム監視
+function initScheduleListener() {
+  const q = query(collection(db, "schedules"), orderBy("date", "asc"));
+  onSnapshot(q, (snapshot) => {
+    const schedules = [];
+    scheduleIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      schedules.push({
+        date        : raw.date         || "",
+        title       : raw.title        || "",
+        place       : raw.place        || "",
+        type        : raw.type         || "勉強会",
+        participants: raw.participants || 0,
+        joined      : false  // joined はローカル管理（端末ごとに異なる）
+      });
+      scheduleIdMap[i] = d.id;
+    });
+    if (window.data && window.renderSchedules) {
+      // joined状態はローカルを引き継ぐ
+      const prevJoined = (window.data.schedules || []).map(s => s.joined);
+      schedules.forEach((s, i) => {
+        s.joined = prevJoined[i] || false;
+      });
+      window.data.schedules = schedules;
+      window.renderSchedules();
+      window.renderSideEvents();
+      console.log(`スケジュールを同期: ${schedules.length}件`);
+    }
+  }, (err) => console.error("スケジュールonSnapshotエラー:", err));
 }
 
+// ============================================================
+// 【FAQ】← 今回新規追加
+// ============================================================
 
-// ----------------------------------------------------------------
-// 【手順6】deleteFaq() を丸ごと置き換え
-// ----------------------------------------------------------------
-
-function deleteFaq(i) {
-  // Firestore から削除
-  if (typeof window.firebaseDeleteFaq === "function") {
-    window.firebaseDeleteFaq(i);
+// FAQ保存
+window.firebaseSaveFaq = async function (faq) {
+  try {
+    await addDoc(collection(db, "faqs"), {
+      category  : faq.category || "履修",
+      q         : faq.q        || "",
+      a         : faq.a        || "",
+      createdAt : serverTimestamp()
+    });
+    console.log("FAQ保存OK");
+  } catch (err) {
+    console.error("FAQ保存失敗:", err);
   }
-  data.faqs.splice(i, 1);
-  saveData();
-  renderAdminLists();
+};
+
+// FAQ削除
+window.firebaseDeleteFaq = async function (localIndex) {
+  const docId = faqIdMap[localIndex];
+  if (!docId) { console.warn("FAQdocId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "faqs", docId));
+    console.log("FAQ削除OK");
+  } catch (err) {
+    console.error("FAQ削除失敗:", err);
+  }
+};
+
+// FAQリアルタイム監視
+function initFaqListener() {
+  const q = query(collection(db, "faqs"), orderBy("createdAt", "asc"));
+  onSnapshot(q, (snapshot) => {
+    const faqs = [];
+    faqIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      faqs.push({
+        category : raw.category || "履修",
+        q        : raw.q        || "",
+        a        : raw.a        || ""
+      });
+      faqIdMap[i] = d.id;
+    });
+    if (window.data && window.renderFaq) {
+      window.data.faqs = faqs;
+      window.renderFaq();
+      console.log(`FAQを同期: ${faqs.length}件`);
+    }
+  }, (err) => console.error("FAQonSnapshotエラー:", err));
 }
+
+// ============================================================
+// 起動時にすべてのリスナーを開始
+// ============================================================
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    initBoardListener();
+    initNoticeListener();
+    initMemberListener();
+    initScheduleListener();  // 今回追加
+    initFaqListener();       // 今回追加
+  }, 1000);
+});
+
+console.log("firebase.js 読込OK");
