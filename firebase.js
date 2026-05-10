@@ -125,8 +125,11 @@ async function handleEmailLinkSignIn() {
 
 // 認証状態の監視
 window.addEventListener("load", async () => {
-  await handleEmailLinkSignIn();
-
+  try {
+    await handleEmailLinkSignIn();
+  } catch(e) {
+    console.error("handleEmailLinkSignIn失敗:", e);
+  }
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // ログイン済み
