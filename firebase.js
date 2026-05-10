@@ -1,11 +1,5 @@
 // ============================================================
-// firebase.js  ―  最終完全版
-// 対応機能：
-//   掲示板：投稿・いいね・スタンプ・返信・解決済み
-//   お知らせ：保存・削除・リアルタイム同期
-//   メンバー：登録・削除・編集・リアルタイム同期
-//   スケジュール：追加・削除・参加・リアルタイム同期
-//   FAQ：追加・削除・リアルタイム同期
+// firebase.js  ―  最終完全版（メールリンク認証追加）
 // ============================================================
 
 import { initializeApp }
@@ -26,6 +20,18 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+import {
+  getAuth,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import { getAnalytics }
+  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+
 // ── Firebase 設定 ─────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyA_0qj3n_4eoARjDTO1jdWRXmYNE7HZRrk",
@@ -37,16 +43,118 @@ const firebaseConfig = {
   measurementId:     "G-DFJ1VJVVD2"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app       = initializeApp(firebaseConfig);
+const db        = getFirestore(app);
+const auth      = getAuth(app);
+const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
 
-// ── docId マップ（ローカルindex ↔ Firestore docId） ────────
+// ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
 let noticeIdMap   = {};
 let memberIdMap   = {};
 let scheduleIdMap = {};
 let faqIdMap      = {};
+
+// ============================================================
+// 【メールリンク認証】
+// ============================================================
+
+const ACTION_CODE_SETTINGS = {
+  url: "https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/",
+  handleCodeInApp: true
+};
+
+const ALLOWED_DOMAIN = "kindai.ac.jp"; // 許可するメールドメイン
+
+// メールリンクを送信
+window.firebaseSendEmailLink = async function (email) {
+  // @kindai.ac.jp のみ許可
+  if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
+    alert("近畿大学のメールアドレス（@kindai.ac.jp）のみ利用できます。");
+    return false;
+  }
+  try {
+    await sendSignInLinkToEmail(auth, email, ACTION_CODE_SETTINGS);
+    // メールアドレスをローカルに保存（リンククリック後に使用）
+    localStorage.setItem("emailForSignIn", email);
+    console.log("メールリンク送信OK");
+    return true;
+  } catch (err) {
+    console.error("メールリンク送信失敗:", err);
+    alert("メールの送信に失敗しました。もう一度お試しください。");
+    return false;
+  }
+};
+
+// ログアウト
+window.firebaseSignOut = async function () {
+  try {
+    await signOut(auth);
+    localStorage.removeItem("emailForSignIn");
+    localStorage.removeItem("siteAccess");
+    location.reload();
+  } catch (err) {
+    console.error("ログアウト失敗:", err);
+  }
+};
+
+// ページ読み込み時：メールリンクからの認証処理
+async function handleEmailLinkSignIn() {
+  if (isSignInWithEmailLink(auth, window.location.href)) {
+    let email = localStorage.getItem("emailForSignIn");
+    if (!email) {
+      // 別端末でリンクを開いた場合
+      email = prompt("確認のためメールアドレスを入力してください");
+    }
+    try {
+      await signInWithEmailLink(auth, email, window.location.href);
+      localStorage.removeItem("emailForSignIn");
+      // URLからトークンを除去
+      window.history.replaceState(
+        {}, document.title,
+        window.location.pathname
+      );
+      console.log("メールリンク認証成功");
+    } catch (err) {
+      console.error("メールリンク認証失敗:", err);
+      alert("認証に失敗しました。もう一度メールアドレスを入力してください。");
+    }
+  }
+}
+
+// 認証状態の監視
+window.addEventListener("load", async () => {
+  await handleEmailLinkSignIn();
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // ログイン済み
+      console.log("ログイン中:", user.email);
+      // メールアドレスをページに表示
+      const emailDisplay = document.getElementById("userEmailDisplay");
+      if (emailDisplay) emailDisplay.textContent = user.email;
+      // ログアウトボタンを表示
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.style.display = "inline-flex";
+      // 認証オーバーレイを非表示
+      const overlay = document.getElementById("authOverlay");
+      if (overlay) overlay.style.display = "none";
+      // Firestoreリスナー開始
+      setTimeout(() => {
+        initBoardListener();
+        initNoticeListener();
+        initMemberListener();
+        initScheduleListener();
+        initFaqListener();
+      }, 1000);
+    } else {
+      // 未ログイン → 認証オーバーレイを表示
+      const overlay = document.getElementById("authOverlay");
+      if (overlay) overlay.style.display = "flex";
+    }
+  });
+});
 
 // ============================================================
 // 【掲示板】
@@ -280,10 +388,9 @@ function initMemberListener() {
 }
 
 // ============================================================
-// 【スケジュール】← 今回新規追加
+// 【スケジュール】
 // ============================================================
 
-// スケジュール保存
 window.firebaseSaveSchedule = async function (schedule) {
   try {
     await addDoc(collection(db, "schedules"), {
@@ -300,7 +407,6 @@ window.firebaseSaveSchedule = async function (schedule) {
   }
 };
 
-// スケジュール削除
 window.firebaseDeleteSchedule = async function (localIndex) {
   const docId = scheduleIdMap[localIndex];
   if (!docId) { console.warn("スケジュールdocId不明:", localIndex); return; }
@@ -312,7 +418,6 @@ window.firebaseDeleteSchedule = async function (localIndex) {
   }
 };
 
-// スケジュール参加（参加人数を+1）
 window.firebaseJoinSchedule = async function (localIndex) {
   const docId = scheduleIdMap[localIndex];
   if (!docId) return;
@@ -326,7 +431,6 @@ window.firebaseJoinSchedule = async function (localIndex) {
   }
 };
 
-// スケジュールリアルタイム監視
 function initScheduleListener() {
   const q = query(collection(db, "schedules"), orderBy("date", "asc"));
   onSnapshot(q, (snapshot) => {
@@ -340,16 +444,13 @@ function initScheduleListener() {
         place       : raw.place        || "",
         type        : raw.type         || "勉強会",
         participants: raw.participants || 0,
-        joined      : false  // joined はローカル管理（端末ごとに異なる）
+        joined      : false
       });
       scheduleIdMap[i] = d.id;
     });
     if (window.data && window.renderSchedules) {
-      // joined状態はローカルを引き継ぐ
       const prevJoined = (window.data.schedules || []).map(s => s.joined);
-      schedules.forEach((s, i) => {
-        s.joined = prevJoined[i] || false;
-      });
+      schedules.forEach((s, i) => { s.joined = prevJoined[i] || false; });
       window.data.schedules = schedules;
       window.renderSchedules();
       window.renderSideEvents();
@@ -359,10 +460,9 @@ function initScheduleListener() {
 }
 
 // ============================================================
-// 【FAQ】← 今回新規追加
+// 【FAQ】
 // ============================================================
 
-// FAQ保存
 window.firebaseSaveFaq = async function (faq) {
   try {
     await addDoc(collection(db, "faqs"), {
@@ -377,7 +477,6 @@ window.firebaseSaveFaq = async function (faq) {
   }
 };
 
-// FAQ削除
 window.firebaseDeleteFaq = async function (localIndex) {
   const docId = faqIdMap[localIndex];
   if (!docId) { console.warn("FAQdocId不明:", localIndex); return; }
@@ -389,7 +488,6 @@ window.firebaseDeleteFaq = async function (localIndex) {
   }
 };
 
-// FAQリアルタイム監視
 function initFaqListener() {
   const q = query(collection(db, "faqs"), orderBy("createdAt", "asc"));
   onSnapshot(q, (snapshot) => {
@@ -411,21 +509,5 @@ function initFaqListener() {
     }
   }, (err) => console.error("FAQonSnapshotエラー:", err));
 }
-
-// ============================================================
-// 起動時にすべてのリスナーを開始
-// ============================================================
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    initBoardListener();
-    initNoticeListener();
-    initMemberListener();
-    initScheduleListener();  // 今回追加
-    initFaqListener();       // 今回追加
-  }, 1000);
-});
-
-console.log("firebase.js 読込OK");
-
 
 console.log("firebase.js 読込OK");
