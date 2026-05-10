@@ -240,8 +240,8 @@
   border-radius: 50%;
   background: linear-gradient(
     135deg,
-    #7488ec,
-    #d7ecf3
+    #deebf2,
+    #a0e7e7
   );
   display: flex;
   align-items: center;
@@ -468,15 +468,13 @@
 
     <select id="memberIcon">
 
-    <option value="📖">📖 勉強</option>
-    <option value="⚖️">⚖️ 法律</option>
-    <option value="🌸">🌸 花</option>
-    <option value="😸">😸 猫</option>
-    <option value="🐶">🐶 犬</option>
-    <option value="🐰">🐰 うさぎ</option>
-    <option value="⭐">⭐ 星</option>
+    <option value="📖">📖 司書</option>
+    <option value="⚖️">⚖️ 法学部</option>
+    <option value="🏠">🏠建築学部</option>
+    <option value="💻">💻 短期大学部</option>
+    <option value="🎀">🎀 卒業生</option>
+    <option value="📝">📝 履修生</option>
     <option value="😊">😊 にこにこ</option>
-  　<option value="🎓">🎓 学生</option>
 
     </select>
 
@@ -559,7 +557,7 @@
     <aside>
       <div class="card"><div class="sidebar-title">👥 メンバー数</div><div class="number" id="memberCount">0</div><div class="muted">登録済みメンバー</div></div>
       <div class="card"><div class="sidebar-title">📅 直近イベント</div><div id="sideEvents" class="grid"></div></div>
-      <div class="card"><div class="sidebar-title">🔗 大学公式リンク</div><div id="sideLinks" class="grid"></div></div>
+      <div class="card" style="display:none;"><div class="sidebar-title">🔗 大学公式リンク</div><div id="sideLinks" class="grid"></div></div>
     </aside>
   </div>
 
@@ -683,27 +681,123 @@
     }
 
     function addBoardPost() {
-      const category = document.getElementById("boardCategory").value;
-      const title = document.getElementById("boardTitle").value.trim();
-      const body = document.getElementById("boardBody").value.trim();
-      const anon = document.getElementById("boardAnon").checked;
-      const name = document.getElementById("boardName").value.trim();
-      if (!title || !body) return alert("タイトルと内容を入力してください");
-      data.boardPosts.unshift({ category, title, body, author: anon ? "匿名" : (name || "メンバー"), likes: 0, solved: false, stamps: {"👍":0,"😊":0,"🎉":0,"💪":0}, replies: [] });
-      document.getElementById("boardTitle").value = "";
-      document.getElementById("boardBody").value = "";
-      saveData();
-    }
 
-    function likePost(i) { data.boardPosts[i].likes++; saveData(); }
-    function stampPost(i, s) { data.boardPosts[i].stamps[s]++; saveData(); }
-    function toggleSolved(i) { data.boardPosts[i].solved = !data.boardPosts[i].solved; saveData(); }
-    function addReply(i) {
-      const text = prompt("返信を入力してください");
-      if (!text) return;
-      data.boardPosts[i].replies.push(text);
-      saveData();
-    }
+  const category =
+    document.getElementById(
+      "boardCategory"
+    ).value;
+
+  const title =
+    document.getElementById(
+      "boardTitle"
+    ).value.trim();
+
+  const body =
+    document.getElementById(
+      "boardBody"
+    ).value.trim();
+
+  const anon =
+    document.getElementById(
+      "boardAnon"
+    ).checked;
+
+  const name =
+    document.getElementById(
+      "boardName"
+    ).value.trim();
+
+  if (!title || !body)
+    return alert(
+      "タイトルと内容を入力してください"
+    );
+
+  const post = {
+
+    category,
+    title,
+    body,
+
+    author:
+      anon
+        ? "匿名"
+        : (name || "メンバー"),
+
+    likes: 0,
+
+    solved: false,
+
+stamps: {
+  "❤": 0,
+  "👍": 0,
+  "😊": 0,
+  "🎉": 0,
+  "💪": 0
+},
+    replies: []
+
+  };
+
+  data.boardPosts.unshift(post);
+
+  if (
+    typeof firebaseSaveBoardPost
+    === "function"
+  ) {
+
+    firebaseSaveBoardPost(post);
+
+  }
+
+  document.getElementById(
+    "boardTitle"
+  ).value = "";
+
+  document.getElementById(
+    "boardBody"
+  ).value = "";
+
+  saveData();
+} 
+
+// いいね ― ローカル更新 ＋ Firestore 送信
+function likePost(i) {
+  data.boardPosts[i].likes++;
+  saveData();
+  // Firestore に送信（firebase.js の関数を呼ぶ）
+  if (typeof window.firebaseLikePost === "function") {
+    window.firebaseLikePost(i);
+  }
+}
+ 
+// スタンプ ― ローカル更新 ＋ Firestore 送信
+function stampPost(i, s) {
+  data.boardPosts[i].stamps[s]++;
+  saveData();
+  if (typeof window.firebaseStampPost === "function") {
+    window.firebaseStampPost(i, s);
+  }
+}
+ 
+// 解決済みトグル ― ローカル更新 ＋ Firestore 送信
+function toggleSolved(i) {
+  data.boardPosts[i].solved = !data.boardPosts[i].solved;
+  saveData();
+  if (typeof window.firebaseToggleSolved === "function") {
+    window.firebaseToggleSolved(i, data.boardPosts[i].solved);
+  }
+}
+ 
+// 返信 ― ローカル更新 ＋ Firestore 保存
+function addReply(i) {
+  const text = prompt("返信を入力してください");
+  if (!text) return;
+  data.boardPosts[i].replies.push(text);
+  saveData();
+  if (typeof window.firebaseAddReply === "function") {
+    window.firebaseAddReply(i, text);
+  }
+}
 
     function renderBoard() {
       const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
@@ -727,9 +821,44 @@
         </div>
       `).join("") || '<div class="muted">該当する投稿はありません。</div>';
     }
+function addSchedule() {
+  const date  = document.getElementById("adminScheduleDate").value;
+  const title = document.getElementById("adminScheduleTitle").value.trim();
+  if (!date || !title) return alert("日付とタイトルを入力してください");
 
-    function joinSchedule(i) { if (data.schedules[i].joined) return; data.schedules[i].participants++; data.schedules[i].joined = true; saveData(); }
+  const schedule = {
+    date,
+    title,
+    place : document.getElementById("adminSchedulePlace").value.trim(),
+    type  : document.getElementById("adminScheduleType").value,
+    participants: 0,
+    joined: false
+  };
 
+  data.schedules.push(schedule);
+
+  if (typeof window.firebaseSaveSchedule === "function") {
+    window.firebaseSaveSchedule(schedule);
+  }
+
+  ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"]
+    .forEach(id => document.getElementById(id).value = "");
+
+  saveData();
+  renderAdminLists();
+}
+function joinSchedule(i) {
+  if (data.schedules[i].joined) return;
+  data.schedules[i].participants++;
+  data.schedules[i].joined = true;
+ 
+  // Firestore の参加人数を+1
+  if (typeof window.firebaseJoinSchedule === "function") {
+    window.firebaseJoinSchedule(i);
+  }
+ 
+  saveData();
+}
     function renderSchedules() {
       document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
         const d = new Date(s.date + "T00:00:00");
@@ -755,8 +884,8 @@
   },
 
   {
-    name: "年間スケジュール",
-    url: "https://www.kindai.ac.jp/tsushin/files/schedule/schedule_2026.pdf/"
+    name: "丸善booklibrary",
+    url: "https://elib.maruzen.co.jp/elib/html/GuestLogin?1/"
   },
 
   {
@@ -799,72 +928,63 @@ document.getElementById(
       document.getElementById("faqList").innerHTML = data.faqs.map(f => `<div class="faq-card" onclick="toggleFaq(this)"><div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div><div class="faq-answer">${escapeHTML(f.a)}</div></div>`).join("");
     }
 
-    function addMember() {
-      const name = document.getElementById("memberName").value.trim();
-      if (!name) return alert("ニックネームを入力してください");
-      data.members.unshift({
-
-  name,
-
-  icon:
-    document.getElementById("memberIcon").value,
-
-  comment:
-    document.getElementById("memberComment").value.trim(),
-
-  subject:
-    document.getElementById("memberSubject").value.trim(),
-
-  style:
-    document.getElementById("memberStyle").value
-
-});
-["memberName", "memberComment", "memberSubject"]
-  .forEach(id =>
-    document.getElementById(id).value = ""
-  );
-
-saveData();
-
-}
-function editMember(index) {
-
-  const m = data.members[index];
-
-  const newGrade = prompt(
-    "学年を入力してください",
-    m.grade || ""
-  );
-
-  if (newGrade === null) return;
-
-  const newComment = prompt(
-    "コメントを編集してください",
-    m.comment || ""
-  );
-
-  if (newComment === null) return;
-
-  m.grade = newGrade;
-  m.comment = newComment;
-
+function addMember() {
+  const name = document.getElementById("memberName").value.trim();
+  if (!name) return alert("ニックネームを入力してください");
+ 
+  const member = {
+    name,
+    icon    : document.getElementById("memberIcon").value,
+    comment : document.getElementById("memberComment").value.trim(),
+    subject : document.getElementById("memberSubject").value.trim(),
+    style   : document.getElementById("memberStyle").value,
+    grade   : document.getElementById("memberGrade").value
+  };
+ 
+  data.members.unshift(member);
+ 
+  // Firestore へ保存
+  if (typeof window.firebaseSaveMember === "function") {
+    window.firebaseSaveMember(member);
+  }
+ 
+  ["memberName", "memberComment", "memberSubject"]
+    .forEach(id => document.getElementById(id).value = "");
+ 
   saveData();
 }
+
+function editMember(index) {
+  const m = data.members[index];
+ 
+  const newGrade = prompt("学年を入力してください", m.grade || "");
+  if (newGrade === null) return;
+ 
+  const newComment = prompt("コメントを編集してください", m.comment || "");
+  if (newComment === null) return;
+ 
+  m.grade   = newGrade;
+  m.comment = newComment;
+ 
+  // Firestore へ更新
+  if (typeof window.firebaseUpdateMember === "function") {
+    window.firebaseUpdateMember(index, { grade: newGrade, comment: newComment });
+  }
+ 
+  saveData();
+}
+ 
+// メンバー削除 ― ローカル更新 ＋ Firestore 削除
 
 function deleteMember(index) {
-
-  if (
-    !confirm(
-      "このメンバーを削除しますか？"
-    )
-  )
-    return;
-
+  if (!confirm("このメンバーを削除しますか？")) return;
+  if (typeof window.firebaseDeleteMember === "function") {
+    window.firebaseDeleteMember(index);
+  }
   data.members.splice(index, 1);
-
   saveData();
 }
-
+ 
 function renderMembers() {
 
   document.getElementById("memberCount").textContent =
@@ -873,7 +993,7 @@ function renderMembers() {
   document.getElementById("memberList").innerHTML =
     data.members.map((m, index) => `
 
-      <div class="member-card">
+      <div class="member-card">S
 
         <div class="member-icon">
           ${escapeHTML(m.icon || "👤")}
@@ -974,36 +1094,85 @@ function renderMembers() {
 }
 
     function todayStr() { const d = new Date(); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; }
-    function addNotice() {
-      const title = document.getElementById("adminNoticeTitle").value.trim();
-      const body = document.getElementById("adminNoticeBody").value.trim();
-      if (!title || !body) return alert("タイトルと本文を入力してください");
-      data.notices.unshift({ title, body, type: document.getElementById("adminNoticeType").value, pinned: document.getElementById("adminNoticePinned").checked, formUrl: document.getElementById("adminNoticeFormUrl").value.trim(), created: todayStr() });
-      ["adminNoticeTitle","adminNoticeBody","adminNoticeFormUrl"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("adminNoticePinned").checked = false;
-      saveData(); renderAdminLists();
-    }
-    function deleteNotice(i) { data.notices.splice(i,1); saveData(); renderAdminLists(); }
-
-    function addSchedule() {
-      const date = document.getElementById("adminScheduleDate").value;
-      const title = document.getElementById("adminScheduleTitle").value.trim();
-      if (!date || !title) return alert("日付とタイトルを入力してください");
-      data.schedules.push({ date, title, place: document.getElementById("adminSchedulePlace").value.trim(), type: document.getElementById("adminScheduleType").value, participants: 0, joined: false });
-      ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
-      saveData(); renderAdminLists();
-    }
-    function deleteSchedule(i) { data.schedules.splice(i,1); saveData(); renderAdminLists(); }
-
-    function addFaq() {
-      const q = document.getElementById("adminFaqQuestion").value.trim();
-      const a = document.getElementById("adminFaqAnswer").value.trim();
-      if (!q || !a) return alert("質問と回答を入力してください");
-      data.faqs.push({ category: document.getElementById("adminFaqCategory").value, q, a });
-      ["adminFaqQuestion","adminFaqAnswer"].forEach(id => document.getElementById(id).value = "");
-      saveData(); renderAdminLists();
-    }
-    function deleteFaq(i) { data.faqs.splice(i,1); saveData(); renderAdminLists(); }
+function addNotice() {
+  const title = document.getElementById("adminNoticeTitle").value.trim();
+  const body  = document.getElementById("adminNoticeBody").value.trim();
+  if (!title || !body) return alert("タイトルと本文を入力してください");
+ 
+  const notice = {
+    title,
+    body,
+    type    : document.getElementById("adminNoticeType").value,
+    pinned  : document.getElementById("adminNoticePinned").checked,
+    formUrl : document.getElementById("adminNoticeFormUrl").value.trim(),
+    created : todayStr()
+  };
+ 
+  data.notices.unshift(notice);
+ 
+  // Firestore へ保存
+  if (typeof window.firebaseSaveNotice === "function") {
+    window.firebaseSaveNotice(notice);
+  }
+ 
+  ["adminNoticeTitle","adminNoticeBody","adminNoticeFormUrl"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("adminNoticePinned").checked = false;
+ 
+  saveData();
+  renderAdminLists();
+}
+function deleteNotice(i) {
+  // Firestore から削除
+  if (typeof window.firebaseDeleteNotice === "function") {
+    window.firebaseDeleteNotice(i);
+  }
+  data.notices.splice(i, 1);
+  saveData();
+  renderAdminLists();
+}
+function deleteSchedule(i) {
+  // Firestore から削除
+  if (typeof window.firebaseDeleteSchedule === "function") {
+    window.firebaseDeleteSchedule(i);
+  }
+  data.schedules.splice(i, 1);
+  saveData();
+  renderAdminLists();
+}
+function addFaq() {
+  const q = document.getElementById("adminFaqQuestion").value.trim();
+  const a = document.getElementById("adminFaqAnswer").value.trim();
+  if (!q || !a) return alert("質問と回答を入力してください");
+ 
+  const faq = {
+    category: document.getElementById("adminFaqCategory").value,
+    q,
+    a
+  };
+ 
+  data.faqs.push(faq);
+ 
+  // Firestore へ保存
+  if (typeof window.firebaseSaveFaq === "function") {
+    window.firebaseSaveFaq(faq);
+  }
+ 
+  ["adminFaqQuestion","adminFaqAnswer"]
+    .forEach(id => document.getElementById(id).value = "");
+ 
+  saveData();
+  renderAdminLists();
+}
+function deleteFaq(i) {
+  // Firestore から削除
+  if (typeof window.firebaseDeleteFaq === "function") {
+    window.firebaseDeleteFaq(i);
+  }
+  data.faqs.splice(i, 1);
+  saveData();
+  renderAdminLists();
+}
 
     function fillAdminSettings() {
       document.getElementById("adminDriveUrl").value = data.settings.driveUrl;
@@ -1037,7 +1206,14 @@ function renderMembers() {
     }
 
     function renderAll() { renderNotices(); renderBoard(); renderSchedules(); renderMaterials(); renderFaq(); renderMembers(); renderContact(); renderSideEvents(); }
-    renderAll();
+    window.data = data;
+    window.renderBoard = renderBoard;
+    window.renderNotices = renderNotices;
+    window.renderMembers = renderMembers;
+    window.renderSchedules = renderSchedules;
+    window.renderSideEvents = renderSideEvents;
+    window.renderFaq = renderFaq;
+          renderAll();
     if (location.hash === "#admin") showTab("admin");
     function checkPassword() {
 
@@ -1125,7 +1301,6 @@ z-index:9999;
   </div>
 
 </div>
+<script type="module" src="./firebase.js"></script>
 </body>
 </html>
-
-
