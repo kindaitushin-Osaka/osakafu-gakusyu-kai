@@ -124,26 +124,22 @@ async function handleEmailLinkSignIn() {
 }
 
 // 認証状態の監視
-window.addEventListener("load", async () => {
-  try {
-    await handleEmailLinkSignIn();
-  } catch(e) {
+window.addEventListener("load", () => {
+  // メールリンク認証の処理（非同期で別途実行）
+  handleEmailLinkSignIn().catch(e => {
     console.error("handleEmailLinkSignIn失敗:", e);
-  }
+  });
+
+  // onAuthStateChangedは即座に開始
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // ログイン済み
       console.log("ログイン中:", user.email);
-      // メールアドレスをページに表示
       const emailDisplay = document.getElementById("userEmailDisplay");
       if (emailDisplay) emailDisplay.textContent = user.email;
-      // ログアウトボタンを表示
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.style.display = "inline-flex";
-      // 認証オーバーレイを非表示
       const overlay = document.getElementById("authOverlay");
       if (overlay) overlay.style.display = "none";
-      // Firestoreリスナー開始
       setTimeout(() => {
         initBoardListener();
         initNoticeListener();
@@ -152,13 +148,11 @@ window.addEventListener("load", async () => {
         initFaqListener();
       }, 1000);
     } else {
-      // 未ログイン → 認証オーバーレイを表示
       const overlay = document.getElementById("authOverlay");
       if (overlay) overlay.style.display = "flex";
     }
   });
 });
-
 // ============================================================
 // 【掲示板】
 // ============================================================
