@@ -813,17 +813,17 @@
     renderAll();
     if (location.hash === "#admin") showTab("admin");
 
-    function checkPassword() {
-      const password = document.getElementById("sitePassword").value;
-      const correctPassword = "study2026";
-      if (password === correctPassword) {
-        document.getElementById("passwordOverlay").style.display = "none";
-        localStorage.setItem("siteAccess", "ok");
-      } else {
-        document.getElementById("passwordError").style.display = "block";
-      }
-    }
-
+function checkPassword() {
+  const password = document.getElementById("sitePassword").value;
+  const correctPassword = "study2026";
+  if (password === correctPassword) {
+    document.getElementById("passwordOverlay").style.display = "none";
+    localStorage.setItem("siteAccess", "ok");
+    document.getElementById("authOverlay").style.display = "flex";
+  } else {
+    document.getElementById("passwordError").style.display = "block";
+  }
+}
     async function sendAuthEmail() {
       const email = document.getElementById("authEmail").value.trim();
       const btn   = document.getElementById("sendEmailBtn");
