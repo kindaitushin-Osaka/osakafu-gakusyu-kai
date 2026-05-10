@@ -48,6 +48,7 @@ const db        = getFirestore(app);
 const auth      = getAuth(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
+console.log("auth初期化:", auth);
 
 // ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
@@ -131,6 +132,7 @@ window.addEventListener("load", () => {
   });
 
   // onAuthStateChangedは即座に開始
+  console.log("onAuthStateChanged開始");
   onAuthStateChanged(auth, (user) => {
     if (user) {
       console.log("ログイン中:", user.email);
