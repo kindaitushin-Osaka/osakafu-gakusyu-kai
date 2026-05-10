@@ -818,7 +818,8 @@ function checkPassword() {
   if (password === correctPassword) {
     document.getElementById("passwordOverlay").style.display = "none";
     localStorage.setItem("siteAccess", "ok");
-    document.getElementById("authOverlay").style.display = "flex";
+    const authOv = document.getElementById("authOverlay");
+    if (authOv) authOv.style.display = "flex";
   } else {
     document.getElementById("passwordError").style.display = "block";
   }
@@ -850,7 +851,7 @@ window.addEventListener("load", () => {
   // siteAccessがokでもauthOverlayを表示
   // firebase.jsのonAuthStateChangedが認証済みなら非表示にする
   const authOv = document.getElementById("authOverlay");
-  if (authOv) authOv.style.display = "flex";  // ← if で囲む
+  if (authOv) authOv.style.display = "flex";
 }
 });
   </script>
