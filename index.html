@@ -314,13 +314,12 @@
             </div>
             <div class="form-group"><label>アイコン</label>
               <select id="memberIcon">
+                <option value="😊">😊 smile</option>
                 <option value="📖">📖 司書</option>
                 <option value="⚖️">⚖️ 法学部</option>
                 <option value="🏠">🏠 建築学部</option>
                 <option value="💻">💻 短期大学部</option>
-                <option value="🎀">🎀 卒業生</option>
                 <option value="📝">📝 履修生</option>
-                <option value="😊">😊 にこにこ</option>
               </select>
             </div>
             <div class="form-group"><label>一言コメント</label><input id="memberComment" placeholder="例：レポート頑張っています" /></div>
@@ -461,14 +460,12 @@
 
     let data = loadData();
 
-    function loadData() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-        return structuredClone(defaultData);
-      }
-      try { return JSON.parse(saved); } catch { return structuredClone(defaultData); }
-    }
+function loadData() {
+  // Firestoreから同期するのでローカルデータは使わない
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+  return structuredClone(defaultData);
+}
 
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); renderAll(); }
 
