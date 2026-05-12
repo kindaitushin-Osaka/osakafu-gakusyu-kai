@@ -297,7 +297,7 @@
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
           <div class="card" style="margin-bottom:16px;">
             <div class="form-row">
-              <div class="form-group"><label>お名前（必須）</label><input id="memberName" placeholder="例：近大太郎" /></div>
+              <div class="form-group"><label>お名前（必須）</label><input id="memberName" placeholder="例：なお" /></div>
               <div class="form-group"><label>得意科目</label><input id="memberSubject" placeholder="例：民法・英語" /></div>
             </div>
             <div class="form-row">
@@ -557,28 +557,38 @@ function loadData() {
       if (typeof window.firebaseAddReply === "function") window.firebaseAddReply(i, text);
     }
 
-    function renderBoard() {
-      const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
-      const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
-        const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
-        const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
-        return matchCat && matchKey;
-      });
-      document.getElementById("boardList").innerHTML = list.map(p => `
-        <div class="post-card">
-          <div class="inline"><span class="badge badge-info">${escapeHTML(p.category)}</span><span class="muted">${escapeHTML(p.author)}</span>${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}</div>
-          <div class="title">${escapeHTML(p.title)}</div>
-          <div class="body-text">${escapeHTML(p.body)}</div>
-          <div class="post-actions">
-            <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
-            ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
-            <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
-            <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
-          </div>
-          <div class="reply-box">${(p.replies || []).map(r => `<div class="reply-item">💬 ${escapeHTML(r)}</div>`).join("")}</div>
-        </div>
-      `).join("") || '<div class="muted">該当する投稿はありません。</div>';
-    }
+ function renderBoard() {
+  const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
+  const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
+    const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
+    const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
+    return matchCat && matchKey;
+  });
+  document.getElementById("boardList").innerHTML = list.map(p => `
+    <div class="post-card">
+      <div class="inline">
+        <span class="badge badge-info">${escapeHTML(p.category)}</span>
+        <span class="muted">${escapeHTML(p.author)}</span>
+        ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
+        ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
+      </div>
+      <div class="title">${escapeHTML(p.title)}</div>
+      <div class="body-text">${escapeHTML(p.body)}</div>
+      <div class="post-actions">
+        <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
+        ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
+        <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
+        <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
+      </div>
+      <div class="reply-box">${(p.replies || []).map(r => `
+        <div class="reply-item">
+          💬 ${escapeHTML(r.text || r)}
+          ${r.created ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
+        </div>`).join("")}
+      </div>
+    </div>
+  `).join("") || '<div class="muted">該当する投稿はありません。</div>';
+}
 
     function addSchedule() {
       const date  = document.getElementById("adminScheduleDate").value;
