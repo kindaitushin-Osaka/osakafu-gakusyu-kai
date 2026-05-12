@@ -1,5 +1,5 @@
 // ============================================================
-// firebase.js  ―  最終完全版（メールリンク認証追加）
+// firebase.js  ―  最終完全版（投稿日時・返信日時追加）
 // ============================================================
 
 import { initializeApp }
@@ -48,7 +48,6 @@ const db        = getFirestore(app);
 const auth      = getAuth(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
-console.log("auth初期化:", auth);
 
 // ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
@@ -56,6 +55,18 @@ let noticeIdMap   = {};
 let memberIdMap   = {};
 let scheduleIdMap = {};
 let faqIdMap      = {};
+
+// ── 日時フォーマット ───────────────────────────────────────
+function formatDateTime(timestamp) {
+  if (!timestamp) return "";
+  const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${y}/${mo}/${day} ${h}:${mi}`;
+}
 
 // ============================================================
 // 【メールリンク認証】
@@ -66,18 +77,15 @@ const ACTION_CODE_SETTINGS = {
   handleCodeInApp: true
 };
 
-const ALLOWED_DOMAIN = "kindai.ac.jp"; // 許可するメールドメイン
+const ALLOWED_DOMAIN = "kindai.ac.jp";
 
-// メールリンクを送信
 window.firebaseSendEmailLink = async function (email) {
-  // @kindai.ac.jp のみ許可
   if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
     alert("近畿大学のメールアドレス（@kindai.ac.jp）のみ利用できます。");
     return false;
   }
   try {
     await sendSignInLinkToEmail(auth, email, ACTION_CODE_SETTINGS);
-    // メールアドレスをローカルに保存（リンククリック後に使用）
     localStorage.setItem("emailForSignIn", email);
     console.log("メールリンク送信OK");
     return true;
@@ -88,7 +96,6 @@ window.firebaseSendEmailLink = async function (email) {
   }
 };
 
-// ログアウト
 window.firebaseSignOut = async function () {
   try {
     await signOut(auth);
@@ -100,22 +107,16 @@ window.firebaseSignOut = async function () {
   }
 };
 
-// ページ読み込み時：メールリンクからの認証処理
 async function handleEmailLinkSignIn() {
   if (isSignInWithEmailLink(auth, window.location.href)) {
     let email = localStorage.getItem("emailForSignIn");
     if (!email) {
-      // 別端末でリンクを開いた場合
       email = prompt("確認のためメールアドレスを入力してください");
     }
     try {
       await signInWithEmailLink(auth, email, window.location.href);
       localStorage.removeItem("emailForSignIn");
-      // URLからトークンを除去
-      window.history.replaceState(
-        {}, document.title,
-        window.location.pathname
-      );
+      window.history.replaceState({}, document.title, window.location.pathname);
       console.log("メールリンク認証成功");
     } catch (err) {
       console.error("メールリンク認証失敗:", err);
@@ -124,17 +125,14 @@ async function handleEmailLinkSignIn() {
   }
 }
 
-// 認証状態の監視
 window.addEventListener("load", () => {
-  // メールリンク認証の処理（非同期で別途実行）
   handleEmailLinkSignIn().catch(e => {
     console.error("handleEmailLinkSignIn失敗:", e);
   });
 
-  // onAuthStateChangedは即座に開始
   console.log("onAuthStateChanged開始");
   onAuthStateChanged(auth, (user) => {
-     console.log("onAuthStateChangedコールバック:", user ? user.email : "未ログイン");
+    console.log("onAuthStateChangedコールバック:", user ? user.email : "未ログイン");
     if (user) {
       console.log("ログイン中:", user.email);
       const emailDisplay = document.getElementById("userEmailDisplay");
@@ -150,12 +148,32 @@ window.addEventListener("load", () => {
         initScheduleListener();
         initFaqListener();
       }, 1000);
-    } else {
+} else {
+      console.log("未ログイン処理開始");
+      // ローカル環境の場合は認証スキップ
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        console.log("ローカル環境のため認証スキップ");
+        setTimeout(() => {
+          initBoardListener();
+          initNoticeListener();
+          initMemberListener();
+          initScheduleListener();
+          initFaqListener();
+        }, 1000);
+        return;
+      }
+      // 本番環境は認証画面を表示
       const overlay = document.getElementById("authOverlay");
-      if (overlay) overlay.style.display = "flex";
+      if (overlay) {
+        overlay.style.display = "flex";
+        console.log("authOverlay表示設定完了");
+      } else {
+        console.log("authOverlayが見つかりません！");
+      }
     }
   });
 });
+
 // ============================================================
 // 【掲示板】
 // ============================================================
@@ -170,7 +188,7 @@ window.firebaseSaveBoardPost = async function (post) {
       likes    : 0,
       solved   : false,
       stamps   : post.stamps,
-      created  : serverTimestamp()
+      created  : serverTimestamp()  // 投稿日時
     });
     console.log("掲示板投稿保存OK");
   } catch (err) {
@@ -213,13 +231,17 @@ window.firebaseToggleSolved = async function (localIndex, newValue) {
   }
 };
 
+// 返信の追加（返信日時も保存）
 window.firebaseAddReply = async function (localIndex, replyText) {
   const docId = boardIdMap[localIndex];
   if (!docId) return;
   try {
     await addDoc(
       collection(db, "boardPosts", docId, "replies"),
-      { text: replyText, created: serverTimestamp() }
+      {
+        text    : replyText,
+        created : serverTimestamp()  // 返信日時
+      }
     );
     console.log("返信保存OK");
   } catch (err) {
@@ -227,6 +249,7 @@ window.firebaseAddReply = async function (localIndex, replyText) {
   }
 };
 
+// 掲示板リアルタイム監視（投稿日時・返信日時を取得）
 async function initBoardListener() {
   const q = query(collection(db, "boardPosts"), orderBy("created", "desc"));
   onSnapshot(q, async (snapshot) => {
@@ -240,7 +263,11 @@ async function initBoardListener() {
         const rSnap = await getDocs(
           query(collection(db, "boardPosts", d.id, "replies"), orderBy("created", "asc"))
         );
-        replies = rSnap.docs.map(r => r.data().text);
+        // 返信日時も取得
+        replies = rSnap.docs.map(r => ({
+          text    : r.data().text,
+          created : formatDateTime(r.data().created)
+        }));
       } catch (_) {}
       posts.push({
         category : raw.category || "質問",
@@ -250,7 +277,8 @@ async function initBoardListener() {
         likes    : raw.likes    || 0,
         solved   : raw.solved   || false,
         stamps   : raw.stamps   || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
-        replies  : replies
+        replies  : replies,
+        created  : formatDateTime(raw.created)  // 投稿日時
       });
       boardIdMap[i] = d.id;
     }
