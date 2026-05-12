@@ -580,12 +580,12 @@ function loadData() {
         <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
         <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
       </div>
-      <div class="reply-box">${(p.replies || []).map(r => `
-        <div class="reply-item">
-          💬 ${escapeHTML(r.text || r)}
-          ${r.created ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
-        </div>`).join("")}
-      </div>
+<div class="reply-box">${(p.replies || []).map(r => `
+  <div class="reply-item">
+    💬 ${escapeHTML(typeof r === 'string' ? r : r.text || '')}
+    ${(typeof r === 'object' && r.created) ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
+  </div>`).join("")}
+</div>
     </div>
   `).join("") || '<div class="muted">該当する投稿はありません。</div>';
 }
