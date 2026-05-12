@@ -855,12 +855,9 @@ function checkPassword() {
 window.addEventListener("load", () => {
   if (localStorage.getItem("siteAccess") !== "ok") {
     document.getElementById("passwordOverlay").style.display = "flex";
-} else {
-  // siteAccessがokでもauthOverlayを表示
-  // firebase.jsのonAuthStateChangedが認証済みなら非表示にする
-  const authOv = document.getElementById("authOverlay");
-  if (authOv) authOv.style.display = "flex";
-}
+  }
+  // authOverlayの表示はfirebase.jsのonAuthStateChangedが制御するため
+  // ここでは何もしない
 });
   </script>
 
