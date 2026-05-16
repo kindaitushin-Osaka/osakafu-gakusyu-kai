@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-  <style>
+    <style>
     :root {
       --ink: #1c2b3a;
       --blue: #3b6ea5;
@@ -91,8 +91,7 @@
 
     .badge {
       display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 10px; border-radius: 999px;
-      font-size: 12px; font-weight: 700; line-height: 1.4;
+      padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.4;
     }
     .badge-important { background: #fae8e8; color: var(--red); }
     .badge-event { background: #e8f1fb; color: var(--blue-dark); }
@@ -102,13 +101,11 @@
     .badge-social { background: #e9f5ef; color: var(--green); }
 
     .notice-card, .post-card, .schedule-card, .member-card, .link-card, .faq-card {
-      border: 1px solid var(--line); border-radius: 14px;
-      background: white; padding: 16px; transition: .15s;
+      border: 1px solid var(--line); border-radius: 14px; background: white; padding: 16px; transition: .15s;
     }
     .notice-card:hover, .post-card:hover, .schedule-card:hover, .member-card:hover, .link-card:hover {
       transform: translateY(-1px); box-shadow: 0 6px 20px rgba(28,43,58,.10);
     }
-
     .notice-card.pinned { border-left: 6px solid var(--red); }
     .notice-card.normal { border-left: 6px solid var(--blue); }
 
@@ -116,11 +113,10 @@
     .body-text { font-size: 14px; color: #374151; white-space: pre-wrap; }
 
     .btn {
-      border: none; background: var(--blue); color: white;
-      padding: 10px 14px; border-radius: 10px; cursor: pointer;
-      font-family: inherit; font-weight: 700; text-decoration: none;
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 6px; transition: .15s;
+      border: none; background: var(--blue); color: white; padding: 10px 14px;
+      border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 700;
+      text-decoration: none; display: inline-flex; align-items: center;
+      justify-content: center; gap: 6px; transition: .15s;
     }
     .btn:hover { background: var(--blue-dark); }
     .btn-light { background: var(--blue-light); color: var(--blue-dark); }
@@ -135,7 +131,7 @@
       width: 100%; border: 1px solid #cfd8e3; border-radius: 10px;
       padding: 10px 12px; font-family: inherit; font-size: 14px; background: white;
     }
-    textarea { min-height: 160px; resize: vertical; }
+    textarea { min-height: 92px; resize: vertical; }
     label { font-size: 13px; font-weight: 700; color: #374151; display: block; margin-bottom: 5px; }
     .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .form-group { margin-bottom: 12px; }
@@ -143,25 +139,12 @@
     .inline input[type="checkbox"] { width: auto; }
 
     .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .filter-bar button {
-      border: 1px solid var(--line); background: white; color: #374151;
-      padding: 7px 11px; border-radius: 999px; cursor: pointer;
-      font-family: inherit;
-    }
+    .filter-bar button { border: 1px solid var(--line); background: white; color: #374151; padding: 7px 11px; border-radius: 999px; cursor: pointer; }
     .filter-bar button.active { background: var(--blue); color: white; border-color: var(--blue); }
 
-    .post-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .post-actions, .reaction-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
     .reply-box { margin-top: 12px; padding-left: 12px; border-left: 3px solid #dbeafe; display: grid; gap: 8px; }
     .reply-item { background: #f6f9fc; padding: 9px 11px; border-radius: 10px; font-size: 13px; }
-
-    /* ローディング */
-    .board-loading {
-      text-align: center; padding: 40px; color: var(--gray); font-size: 15px;
-    }
-    .board-error {
-      background: #fae8e8; color: var(--red); padding: 14px; border-radius: 10px;
-      margin-bottom: 14px; font-size: 14px;
-    }
 
     .schedule-card { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; }
     .datebox { background: var(--blue-light); color: var(--blue-dark); border-radius: 12px; padding: 10px; text-align: center; font-weight: 900; }
@@ -181,7 +164,7 @@
     .member-card .name { font-weight: 900; font-size: 17px; color: var(--blue-dark); }
     .member-icon {
       width: 72px; height: 72px; border-radius: 50%;
-      background: linear-gradient(135deg, #7488ec, #d7ecf3);
+      background: linear-gradient(135deg, #deebf2, #a0e7e7);
       display: flex; align-items: center; justify-content: center;
       font-size: 34px; color: white; margin: 0 auto 14px;
       box-shadow: 0 4px 12px rgba(59,110,165,.25);
@@ -239,12 +222,17 @@
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('admin', this)">管理</button>
       </nav>
+      <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="userEmailDisplay" style="color:#b8c7d6;font-size:12px;"></span>
+        <button id="logoutBtn" class="btn btn-small"
+          style="display:none;background:rgba(255,255,255,.15);font-size:12px;"
+          onclick="window.firebaseSignOut()">ログアウト</button>
+      </div>
     </div>
   </header>
 
   <div class="wrap">
     <main>
-      <!-- お知らせ -->
       <section id="noticeTab" class="tab-content active">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📢 お知らせ</h2><span class="muted">ピン留めは最上部表示</span></div>
@@ -252,36 +240,19 @@
         </div>
       </section>
 
-      <!-- 掲示板 -->
       <section id="boardTab" class="tab-content">
         <div class="card">
-          <div class="section-head">
-            <h2 class="section-title">💬 掲示板</h2>
-            <span class="muted">みんなの投稿はリアルタイムで共有されます</span>
-          </div>
-
-          <!-- 投稿フォーム -->
+          <div class="section-head"><h2 class="section-title">💬 掲示板</h2><span class="muted">匿名OK・カテゴリ検索対応</span></div>
           <div class="card" style="margin-bottom:16px;">
             <div class="form-row">
-              <div class="form-group">
-                <label>カテゴリ</label>
-                <select id="boardCategory"><option>質問</option><option>相談</option><option>情報共有</option><option>雑談</option></select>
-              </div>
-              <div class="form-group">
-                <label>表示名（任意）</label>
-                <input id="boardName" placeholder="空欄なら「メンバー」" />
-              </div>
+              <div class="form-group"><label>カテゴリ</label><select id="boardCategory"><option>質問</option><option>相談</option><option>情報共有</option><option>雑談</option></select></div>
+              <div class="form-group"><label>表示名</label><input id="boardName" placeholder="空欄ならメンバー" /></div>
             </div>
-            <div class="form-group inline">
-              <input type="checkbox" id="boardAnon" checked>
-              <span>匿名で投稿する</span>
-            </div>
+            <div class="form-group inline"><input type="checkbox" id="boardAnon" checked><span>匿名で投稿する</span></div>
             <div class="form-group"><label>タイトル</label><input id="boardTitle" placeholder="例：レポートの書き方が不安です" /></div>
             <div class="form-group"><label>内容</label><textarea id="boardBody" placeholder="質問・相談・情報共有などを入力してください"></textarea></div>
-            <button class="btn" id="boardSubmitBtn" onclick="addBoardPost()">投稿する</button>
+            <button class="btn" onclick="addBoardPost()">投稿する</button>
           </div>
-
-          <!-- フィルター・検索 -->
           <div class="filter-bar">
             <button class="active" onclick="setBoardFilter('すべて', this)">すべて</button>
             <button onclick="setBoardFilter('質問', this)">質問</button>
@@ -289,16 +260,11 @@
             <button onclick="setBoardFilter('情報共有', this)">情報共有</button>
             <button onclick="setBoardFilter('雑談', this)">雑談</button>
           </div>
-          <div class="form-group"><input id="boardSearch" oninput="renderBoard()" placeholder="🔍 キーワード検索" /></div>
-
-          <div id="boardError" class="board-error" style="display:none;"></div>
-          <div id="boardList" class="grid">
-            <div class="board-loading">⏳ 投稿を読み込んでいます...</div>
-          </div>
+          <div class="form-group"><input id="boardSearch" oninput="renderBoard()" placeholder="キーワード検索" /></div>
+          <div id="boardList" class="grid"></div>
         </div>
       </section>
 
-      <!-- スケジュール -->
       <section id="scheduleTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📅 スケジュール</h2><span class="muted">参加ボタンつき</span></div>
@@ -306,7 +272,6 @@
         </div>
       </section>
 
-      <!-- 資料 -->
       <section id="materialsTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📁 資料</h2><span class="muted">Google Driveと大学公式リンク</span></div>
@@ -320,7 +285,6 @@
         </div>
       </section>
 
-      <!-- FAQ -->
       <section id="faqTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">❓ FAQ</h2><span class="muted">クリックで開閉</span></div>
@@ -328,26 +292,34 @@
         </div>
       </section>
 
-      <!-- メンバー -->
       <section id="membersTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
           <div class="card" style="margin-bottom:16px;">
             <div class="form-row">
-              <div class="form-group"><label>ニックネーム（必須）</label><input id="memberName" placeholder="例：なお" /></div>
+              <div class="form-group"><label>お名前（必須）</label><input id="memberName" placeholder="例：なお" /></div>
               <div class="form-group"><label>得意科目</label><input id="memberSubject" placeholder="例：民法・英語" /></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>勉強スタイル</label><select id="memberStyle"><option>朝型</option><option>夜型</option><option>週末集中</option></select></div>
-              <div class="form-group"><label>学年</label><select id="memberGrade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option><option value="4年">4年</option><option value="履修生">履修生</option><option value="卒業生">卒業生</option></select></div>
+              <div class="form-group"><label>勉強スタイル</label>
+                <select id="memberStyle"><option>朝型</option><option>夜型</option><option>週末集中</option></select>
+              </div>
+              <div class="form-group"><label>学年</label>
+                <select id="memberGrade">
+                  <option value="1年">1年</option><option value="2年">2年</option>
+                  <option value="3年">3年</option><option value="4年">4年</option>
+                  <option value="履修生">履修生</option><option value="卒業生">卒業生</option>
+                </select>
+              </div>
             </div>
             <div class="form-group"><label>アイコン</label>
               <select id="memberIcon">
-                <option value="📖">📖 勉強</option><option value="⚖️">⚖️ 法律</option>
-                <option value="🌸">🌸 花</option><option value="😸">😸 猫</option>
-                <option value="🐶">🐶 犬</option><option value="🐰">🐰 うさぎ</option>
-                <option value="⭐">⭐ 星</option><option value="😊">😊 にこにこ</option>
-                <option value="🎓">🎓 学生</option>
+                <option value="😊">😊 smile</option>
+                <option value="📖">📖 司書</option>
+                <option value="⚖️">⚖️ 法学部</option>
+                <option value="🏠">🏠 建築学部</option>
+                <option value="💻">💻 短期大学部</option>
+                <option value="📝">📝 履修生</option>
               </select>
             </div>
             <div class="form-group"><label>一言コメント</label><input id="memberComment" placeholder="例：レポート頑張っています" /></div>
@@ -357,21 +329,19 @@
         </div>
       </section>
 
-      <!-- お問い合わせ -->
       <section id="contactTab" class="tab-content">
         <div class="card">
           <h2 class="section-title">📮 お問い合わせ</h2>
-          <p style="margin-top:10px;">学習内容・試験・履修に関するご質問は大学事務局へお問い合わせください。</p>
+          <p>学習内容・試験・履修に関するご質問は大学事務局へお問い合わせください。</p>
           <div id="contactInfo" class="card" style="margin-top:14px;"></div>
         </div>
       </section>
 
-      <!-- 管理 -->
       <section id="adminTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">試作用パスワード：admin1234</span></div>
           <div id="adminLogin">
-            <div class="admin-note">この管理機能は試作用です。本番運用では正式な認証方式が必要です。</div>
+            <div class="admin-note">この管理機能は試作用です。本番運用では固定パスワードではなく、正式な認証方式が必要です。</div>
             <div class="form-group"><label>管理者パスワード</label><input id="adminPass" type="password" placeholder="admin1234" /></div>
             <button class="btn" onclick="loginAdmin()">ログイン</button>
           </div>
@@ -414,11 +384,6 @@
               <div id="adminFaqList" class="grid" style="margin-top:14px;"></div>
             </div>
             <div class="card">
-              <h3>掲示板の管理</h3>
-              <p class="muted" style="margin-bottom:12px;">投稿の確認・削除はGoogleスプレッドシートから直接行えます。</p>
-              <a class="btn btn-light" href="https://docs.google.com/spreadsheets/" target="_blank">📊 スプレッドシートを開く</a>
-            </div>
-            <div class="card">
               <h3>資料・連絡先設定</h3>
               <div class="form-group"><label>DriveフォルダURL</label><input id="adminDriveUrl"></div>
               <div class="form-group"><label>Drive説明文</label><input id="adminDriveDesc"></div>
@@ -438,7 +403,7 @@
     <aside>
       <div class="card"><div class="sidebar-title">👥 メンバー数</div><div class="number" id="memberCount">0</div><div class="muted">登録済みメンバー</div></div>
       <div class="card"><div class="sidebar-title">📅 直近イベント</div><div id="sideEvents" class="grid"></div></div>
-      <div class="card"><div class="sidebar-title">🔗 大学公式リンク</div><div id="sideLinks" class="grid"></div></div>
+      <div class="card" style="display:none;"><div class="sidebar-title">🔗 大学公式リンク</div><div id="sideLinks" class="grid"></div></div>
     </aside>
   </div>
 
@@ -448,14 +413,8 @@
   </footer>
 
   <script>
-    // =============================================
-    // GAS URL（掲示板のデータ保存先）
-    // =============================================
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbws_rq1DUGwyTBvOy1L0kd2v7m4ccj1sYFBtF5eMsoqcmOJO5t9idZZDT8ILl3KA-6ZcA/exec";
-
     const STORAGE_KEY = "studyCirclePortalV1";
     let currentBoardFilter = "すべて";
-    let boardPosts = []; // GASから取得した投稿を格納
 
     const defaultData = {
       settings: {
@@ -469,6 +428,10 @@
         { title: "科目終末試験申し込み", body: "5月６日～５月１２日の間にクレドから申し込みしてください。", type: "重要", pinned: true, formUrl: "", created: "2026/05/08" },
         { title: "オンライン勉強会開催", body: "試験対策勉強会をZoomで開催します。", type: "イベント", pinned: false, formUrl: "https://forms.google.com/", created: "2026/05/08" },
         { title: "共有フォルダを更新しました", body: "英語・法学の資料を追加しました。", type: "お知らせ", pinned: false, formUrl: "", created: "2026/05/08" }
+      ],
+      boardPosts: [
+        { category: "質問", title: "レポートの書き方について", body: "序論と本論のバランスが難しいです。どのように構成すると読みやすくなりますか？", author: "匿名", likes: 2, solved: false, stamps: {"❤":0,"👍":1,"😊":2,"🎉":0,"💪":1}, replies: ["最初に結論の方向性を決めると書きやすいです。"] },
+        { category: "情報共有", title: "参考文献の探し方", body: "図書館サイトとCiNiiを併用すると見つけやすかったです。", author: "メンバー", likes: 4, solved: true, stamps: {"❤":0,"👍":3,"😊":1,"🎉":1,"💪":0}, replies: [] }
       ],
       schedules: [
         { date: "2026-05-20", title: "レポートの書き方勉強会", place: "オンライン", type: "勉強会", participants: 5, joined: false },
@@ -491,17 +454,18 @@
       ],
       members: [
         { name: "なお", icon: "⚖️", comment: "レポートと仕事の両立を頑張っています。", subject: "民法・英語", style: "週末集中", grade: "2年" },
-        { name: "そら", icon: "📚", comment: "試験前のもくもく会が好きです。", subject: "憲法", style: "朝型", grade: "1年" }
+        { name: "そら", icon: "📖", comment: "試験前の緊張感が好きです。", subject: "憲法", style: "朝型", grade: "1年" }
       ]
     };
 
     let data = loadData();
 
-    function loadData() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) { localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData)); return structuredClone(defaultData); }
-      try { return JSON.parse(saved); } catch { return structuredClone(defaultData); }
-    }
+function loadData() {
+  // Firestoreから同期するのでローカルデータは使わない
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+  return structuredClone(defaultData);
+}
 
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); renderAll(); }
 
@@ -515,7 +479,7 @@
       if (tab) tab.classList.add("active");
       document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
       if (btn) btn.classList.add("active");
-      if (name === "board") loadBoardPosts();
+      if (name === "admin") location.hash = "admin";
     }
 
     function typeClass(type) {
@@ -527,99 +491,16 @@
       return "badge-info";
     }
 
-    // =============================================
-    // 掲示板：GAS連携
-    // =============================================
-    function showBoardError(msg) {
-      const el = document.getElementById("boardError");
-      el.textContent = msg;
-      el.style.display = "block";
-    }
-    function hideBoardError() {
-      document.getElementById("boardError").style.display = "none";
-    }
-
-    async function loadBoardPosts() {
-      document.getElementById("boardList").innerHTML = '<div class="board-loading">⏳ 投稿を読み込んでいます...</div>';
-      hideBoardError();
-      try {
-        const res = await fetch(GAS_URL, { method: "GET" });
-        if (!res.ok) throw new Error("通信エラー");
-        const json = await res.json();
-        boardPosts = Array.isArray(json) ? json.reverse() : [];
-        renderBoard();
-      } catch (e) {
-        showBoardError("⚠️ 投稿の読み込みに失敗しました。時間をおいて再試行してください。");
-        document.getElementById("boardList").innerHTML = "";
-      }
-    }
-
-    async function gasPost(payload) {
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error("通信エラー");
-      return await res.json();
-    }
-
-    async function addBoardPost() {
-      const title = document.getElementById("boardTitle").value.trim();
-      const body = document.getElementById("boardBody").value.trim();
-      if (!title || !body) return alert("タイトルと内容を入力してください");
-      const anon = document.getElementById("boardAnon").checked;
-      const name = document.getElementById("boardName").value.trim();
-      const btn = document.getElementById("boardSubmitBtn");
-      btn.disabled = true;
-      btn.textContent = "送信中...";
-      hideBoardError();
-      try {
-        await gasPost({
-          action: "add",
-          category: document.getElementById("boardCategory").value,
-          title,
-          body,
-          author: anon ? "匿名" : (name || "メンバー")
-        });
-        document.getElementById("boardTitle").value = "";
-        document.getElementById("boardBody").value = "";
-        await loadBoardPosts();
-      } catch {
-        showBoardError("⚠️ 投稿に失敗しました。時間をおいて再試行してください。");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "投稿する";
-      }
-    }
-
-    async function likePost(index) {
-      try {
-        await gasPost({ action: "like", _index: boardPosts[index]._index });
-        await loadBoardPosts();
-      } catch { alert("通信エラーが発生しました"); }
-    }
-
-    async function stampPost(index, stamp) {
-      try {
-        await gasPost({ action: "stamp", _index: boardPosts[index]._index, stamp });
-        await loadBoardPosts();
-      } catch { alert("通信エラーが発生しました"); }
-    }
-
-    async function toggleSolved(index) {
-      try {
-        await gasPost({ action: "solved", _index: boardPosts[index]._index });
-        await loadBoardPosts();
-      } catch { alert("通信エラーが発生しました"); }
-    }
-
-    async function addReply(index) {
-      const text = prompt("返信を入力してください");
-      if (!text) return;
-      try {
-        await gasPost({ action: "reply", _index: boardPosts[index]._index, reply: text });
-        await loadBoardPosts();
-      } catch { alert("通信エラーが発生しました"); }
+    function renderNotices() {
+      const sorted = [...data.notices].sort((a,b) => Number(b.pinned) - Number(a.pinned));
+      document.getElementById("noticeList").innerHTML = sorted.map((n, i) => `
+        <div class="notice-card ${n.pinned ? "pinned" : "normal"}">
+          <div class="inline"><span class="badge ${typeClass(n.type)}">${escapeHTML(n.type)}</span>${n.pinned ? '<span class="badge badge-important">📌 ピン留め</span>' : ''}<span class="muted">${escapeHTML(n.created || "")}</span></div>
+          <div class="title">${escapeHTML(n.title)}</div>
+          <div class="body-text">${escapeHTML(n.body)}</div>
+          ${n.type === "イベント" && n.formUrl ? `<a class="btn btn-small" href="${escapeHTML(n.formUrl)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">申し込みはこちら</a>` : ""}
+        </div>
+      `).join("");
     }
 
     function setBoardFilter(filter, btn) {
@@ -629,80 +510,124 @@
       renderBoard();
     }
 
-    function renderBoard() {
-      const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
-      const list = boardPosts.map((p, i) => ({...p, _listIndex: i})).filter(p => {
-        const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
-        const matchKey = !keyword || (String(p.title) + String(p.body) + String(p.author)).toLowerCase().includes(keyword);
-        return matchCat && matchKey;
-      });
-
-      if (list.length === 0) {
-        document.getElementById("boardList").innerHTML = '<div class="muted" style="text-align:center;padding:30px;">該当する投稿はありません。</div>';
-        return;
-      }
-
-      document.getElementById("boardList").innerHTML = list.map(p => {
-        const stamps = typeof p.stamps === "object" ? p.stamps : {};
-        const replies = Array.isArray(p.replies) ? p.replies : [];
-        return `
-          <div class="post-card">
-            <div class="inline">
-              <span class="badge badge-info">${escapeHTML(p.category)}</span>
-              <span class="muted">${escapeHTML(p.author)}</span>
-              ${p.solved == "true" || p.solved === true ? '<span class="badge badge-study">✅ 解決済み</span>' : ''}
-              <span class="muted" style="margin-left:auto;">${escapeHTML(p.created || "")}</span>
-            </div>
-            <div class="title">${escapeHTML(p.title)}</div>
-            <div class="body-text">${escapeHTML(p.body)}</div>
-            <div class="post-actions">
-              <button class="btn btn-light btn-small" onclick="likePost(${p._listIndex})">❤️ ${p.likes || 0}</button>
-              ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._listIndex}, '${s}')">${s} ${stamps[s] || 0}</button>`).join("")}
-              <button class="btn btn-ghost btn-small" onclick="addReply(${p._listIndex})">💬 返信</button>
-              <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._listIndex})">${p.solved == "true" || p.solved === true ? "未解決に戻す" : "解決済みにする"}</button>
-            </div>
-            ${replies.length > 0 ? `<div class="reply-box">${replies.map(r => `<div class="reply-item">💬 ${escapeHTML(r)}</div>`).join("")}</div>` : ""}
-          </div>
-        `;
-      }).join("");
+    function addBoardPost() {
+      const category = document.getElementById("boardCategory").value;
+      const title = document.getElementById("boardTitle").value.trim();
+      const body = document.getElementById("boardBody").value.trim();
+      const anon = document.getElementById("boardAnon").checked;
+      const name = document.getElementById("boardName").value.trim();
+      if (!title || !body) return alert("タイトルと内容を入力してください");
+      const post = {
+        category, title, body,
+        author: anon ? "匿名" : (name || "メンバー"),
+        likes: 0, solved: false,
+        stamps: { "❤": 0, "👍": 0, "😊": 0, "🎉": 0, "💪": 0 },
+        replies: []
+      };
+      data.boardPosts.unshift(post);
+      if (typeof window.firebaseSaveBoardPost === "function") window.firebaseSaveBoardPost(post);
+      document.getElementById("boardTitle").value = "";
+      document.getElementById("boardBody").value = "";
+      saveData();
     }
 
-    // =============================================
-    // その他の機能（localStorage）
-    // =============================================
-    function autoLink(str) {
-      return escapeHTML(str).replace(
-        /(https?:\/\/[^\s　]+)/g,
-        '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;">$1</a>'
-      );
+    function likePost(i) {
+      data.boardPosts[i].likes++;
+      saveData();
+      if (typeof window.firebaseLikePost === "function") window.firebaseLikePost(i);
     }
 
-    function renderNotices() {
-      const sorted = [...data.notices].sort((a,b) => Number(b.pinned) - Number(a.pinned));
-      document.getElementById("noticeList").innerHTML = sorted.map((n, i) => `
-        <div class="notice-card ${n.pinned ? "pinned" : "normal"}">
-          <div class="inline">
-            <span class="badge ${typeClass(n.type)}">${escapeHTML(n.type)}</span>
-            ${n.pinned ? '<span class="badge badge-important">📌 ピン留め</span>' : ''}
-            <span class="muted">${escapeHTML(n.created || "")}</span>
-          </div>
-          <div class="title">${escapeHTML(n.title)}</div>
-          <div class="body-text">${autoLink(n.body)}</div>
-          ${n.type === "イベント" && n.formUrl ? `<a class="btn btn-small" href="${escapeHTML(n.formUrl)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">📝 申し込みはこちら</a>` : ""}
-        </div>
-      `).join("");
+    function stampPost(i, s) {
+      data.boardPosts[i].stamps[s]++;
+      saveData();
+      if (typeof window.firebaseStampPost === "function") window.firebaseStampPost(i, s);
     }
 
-    function joinSchedule(i) { if (data.schedules[i].joined) return; data.schedules[i].participants++; data.schedules[i].joined = true; saveData(); }
+    function toggleSolved(i) {
+      data.boardPosts[i].solved = !data.boardPosts[i].solved;
+      saveData();
+      if (typeof window.firebaseToggleSolved === "function") window.firebaseToggleSolved(i, data.boardPosts[i].solved);
+    }
+
+    function addReply(i) {
+      const text = prompt("返信を入力してください");
+      if (!text) return;
+      data.boardPosts[i].replies.push(text);
+      saveData();
+      if (typeof window.firebaseAddReply === "function") window.firebaseAddReply(i, text);
+    }
+
+ function renderBoard() {
+  const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
+  const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
+    const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
+    const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
+    return matchCat && matchKey;
+  });
+  document.getElementById("boardList").innerHTML = list.map(p => `
+    <div class="post-card">
+      <div class="inline">
+        <span class="badge badge-info">${escapeHTML(p.category)}</span>
+        <span class="muted">${escapeHTML(p.author)}</span>
+        ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
+        ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
+      </div>
+      <div class="title">${escapeHTML(p.title)}</div>
+      <div class="body-text">${escapeHTML(p.body)}</div>
+      <div class="post-actions">
+        <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
+        ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
+        <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
+        <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
+      </div>
+<div class="reply-box">${(p.replies || []).map(r => `
+  <div class="reply-item">
+    💬 ${escapeHTML(typeof r === 'string' ? r : r.text || '')}
+    ${(typeof r === 'object' && r.created) ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
+  </div>`).join("")}
+</div>
+    </div>
+  `).join("") || '<div class="muted">該当する投稿はありません。</div>';
+}
+
+    function addSchedule() {
+      const date  = document.getElementById("adminScheduleDate").value;
+      const title = document.getElementById("adminScheduleTitle").value.trim();
+      if (!date || !title) return alert("日付とタイトルを入力してください");
+      const schedule = {
+        date, title,
+        place : document.getElementById("adminSchedulePlace").value.trim(),
+        type  : document.getElementById("adminScheduleType").value,
+        participants: 0, joined: false
+      };
+      data.schedules.push(schedule);
+      if (typeof window.firebaseSaveSchedule === "function") window.firebaseSaveSchedule(schedule);
+      ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
+      saveData();
+      renderAdminLists();
+    }
+
+    function joinSchedule(i) {
+      if (data.schedules[i].joined) return;
+      data.schedules[i].participants++;
+      data.schedules[i].joined = true;
+      if (typeof window.firebaseJoinSchedule === "function") window.firebaseJoinSchedule(i);
+      saveData();
+    }
+
+    function deleteSchedule(i) {
+      if (typeof window.firebaseDeleteSchedule === "function") window.firebaseDeleteSchedule(i);
+      data.schedules.splice(i, 1);
+      saveData();
+      renderAdminLists();
+    }
 
     function renderSchedules() {
       document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
         const d = new Date(s.date + "T00:00:00");
-        return `<div class="schedule-card">
-          <div class="datebox"><div class="day">${d.getDate()}</div><div class="month">${d.getMonth()+1}月</div></div>
-          <div><span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span><div class="title">${escapeHTML(s.title)}</div><div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div></div>
-          <button class="btn ${s.joined ? 'btn-ghost' : ''}" onclick="joinSchedule(${i})" ${s.joined ? 'disabled' : ''}>${s.joined ? '参加済み ✓' : '参加する'}</button>
-        </div>`;
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        return `<div class="schedule-card"><div class="datebox"><div class="day">${day}</div><div class="month">${month}月</div></div><div><span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span><div class="title">${escapeHTML(s.title)}</div><div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div></div><button class="btn ${s.joined ? 'btn-ghost' : ''}" onclick="joinSchedule(${i})" ${s.joined ? 'disabled' : ''}>${s.joined ? '参加済み ✓' : '参加する'}</button></div>`;
       }).join("");
     }
 
@@ -712,52 +637,61 @@
       const links = [
         { name: "KULeD", url: "https://kuled.kindai.ac.jp/" },
         { name: "梅信", url: "https://www.kindai.ac.jp/tsushin/for-students/baishin/" },
-        { name: "年間スケジュール", url: "https://www.kindai.ac.jp/tsushin/files/schedule/schedule_2026.pdf/" },
+        { name: "丸善booklibrary", url: "https://elib.maruzen.co.jp/elib/html/GuestLogin?1/" },
         { name: "大学公式サイト", url: "https://www.kindai.ac.jp/tsushin/" }
       ];
       document.getElementById("universityLinks").innerHTML = links.map(x => `
         <a class="link-card side-link" href="${x.url}" target="_blank">
-          <strong>🎓 ${x.name}</strong><div class="muted">👆 クリックで開く</div>
-        </a>`).join("");
-      document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x => `
-        <a class="side-link" href="${x.url}" target="_blank" style="padding:6px 0; border-bottom:1px solid var(--line); font-size:13px;">🔗 ${x.name}</a>`).join("");
+          <strong>🎓 ${x.name}</strong><div class="muted">👆</div>
+        </a>
+      `).join("");
+      document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x => `<a class="sidebar-item side-link" href="${x.url}" target="_blank">${x.name}</a>`).join("");
     }
 
     function toggleFaq(el) { el.classList.toggle("open"); }
     function renderFaq() {
-      document.getElementById("faqList").innerHTML = data.faqs.map(f => `
-        <div class="faq-card" onclick="toggleFaq(this)">
-          <div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div>
-          <div class="faq-answer">${escapeHTML(f.a)}</div>
-        </div>`).join("");
+      document.getElementById("faqList").innerHTML = data.faqs.map(f => `<div class="faq-card" onclick="toggleFaq(this)"><div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div><div class="faq-answer">${escapeHTML(f.a)}</div></div>`).join("");
     }
 
     function addMember() {
       const name = document.getElementById("memberName").value.trim();
       if (!name) return alert("ニックネームを入力してください");
-      data.members.unshift({ name, icon: document.getElementById("memberIcon").value, comment: document.getElementById("memberComment").value.trim(), subject: document.getElementById("memberSubject").value.trim(), style: document.getElementById("memberStyle").value, grade: document.getElementById("memberGrade").value });
-      ["memberName","memberComment","memberSubject"].forEach(id => document.getElementById(id).value = "");
+      const member = {
+        name,
+        icon    : document.getElementById("memberIcon").value,
+        comment : document.getElementById("memberComment").value.trim(),
+        subject : document.getElementById("memberSubject").value.trim(),
+        style   : document.getElementById("memberStyle").value,
+        grade   : document.getElementById("memberGrade").value
+      };
+      data.members.unshift(member);
+      if (typeof window.firebaseSaveMember === "function") window.firebaseSaveMember(member);
+      ["memberName", "memberComment", "memberSubject"].forEach(id => document.getElementById(id).value = "");
       saveData();
     }
 
     function editMember(index) {
       const m = data.members[index];
+      const newGrade = prompt("学年を入力してください", m.grade || "");
+      if (newGrade === null) return;
       const newComment = prompt("コメントを編集してください", m.comment || "");
       if (newComment === null) return;
+      m.grade = newGrade;
       m.comment = newComment;
+      if (typeof window.firebaseUpdateMember === "function") window.firebaseUpdateMember(index, { grade: newGrade, comment: newComment });
       saveData();
     }
 
     function deleteMember(index) {
       if (!confirm("このメンバーを削除しますか？")) return;
+      if (typeof window.firebaseDeleteMember === "function") window.firebaseDeleteMember(index);
       data.members.splice(index, 1);
       saveData();
     }
 
     function renderMembers() {
       document.getElementById("memberCount").textContent = data.members.length;
-      const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
-      document.getElementById("memberList").innerHTML = data.members.map((m, i) => `
+      document.getElementById("memberList").innerHTML = data.members.map((m, index) => `
         <div class="member-card">
           <div class="member-icon">${escapeHTML(m.icon || "👤")}</div>
           <div class="name">${escapeHTML(m.name)}</div>
@@ -765,8 +699,13 @@
           <div class="muted">勉強スタイル：${escapeHTML(m.style)}</div>
           <div class="muted">🎓 学年：${escapeHTML(m.grade || "未設定")}</div>
           <p style="margin-top:8px;">${escapeHTML(m.comment || "よろしくお願いします。")}</p>
-          ${isAdmin ? `<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-light btn-small" onclick="editMember(${i})">編集</button><button class="btn btn-danger btn-small" onclick="deleteMember(${i})">削除</button></div>` : ""}
-        </div>`).join("");
+          ${document.getElementById("adminPanel")?.style.display === "grid" ? `
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button class="btn btn-light btn-small" onclick="editMember(${index})">編集</button>
+              <button class="btn btn-danger btn-small" onclick="deleteMember(${index})">削除</button>
+            </div>` : ""}
+        </div>
+      `).join("");
     }
 
     function renderContact() {
@@ -776,10 +715,7 @@
     }
 
     function renderSideEvents() {
-      document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `
-        <div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;">
-          <strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}
-        </div>`).join("");
+      document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `<div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}</div>`).join("");
     }
 
     function loginAdmin() {
@@ -795,67 +731,47 @@
 
     function addNotice() {
       const title = document.getElementById("adminNoticeTitle").value.trim();
-      const body = document.getElementById("adminNoticeBody").value.trim();
+      const body  = document.getElementById("adminNoticeBody").value.trim();
       if (!title || !body) return alert("タイトルと本文を入力してください");
-      data.notices.unshift({ title, body, type: document.getElementById("adminNoticeType").value, pinned: document.getElementById("adminNoticePinned").checked, formUrl: document.getElementById("adminNoticeFormUrl").value.trim(), created: todayStr() });
+      const notice = {
+        title, body,
+        type    : document.getElementById("adminNoticeType").value,
+        pinned  : document.getElementById("adminNoticePinned").checked,
+        formUrl : document.getElementById("adminNoticeFormUrl").value.trim(),
+        created : todayStr()
+      };
+      data.notices.unshift(notice);
+      if (typeof window.firebaseSaveNotice === "function") window.firebaseSaveNotice(notice);
       ["adminNoticeTitle","adminNoticeBody","adminNoticeFormUrl"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("adminNoticePinned").checked = false;
-      saveData(); renderAdminLists();
-    }
-    function deleteNotice(i) { data.notices.splice(i,1); saveData(); renderAdminLists(); }
-
-    function editNotice(i) {
-      const n = data.notices[i];
-      const title = prompt("タイトルを編集してください", n.title);
-      if (title === null) return;
-      const body = prompt("本文を編集してください", n.body);
-      if (body === null) return;
-      const formUrl = prompt("GoogleフォームURL（不要なら空欄）", n.formUrl || "");
-      if (formUrl === null) return;
-      data.notices[i] = { ...n, title: title.trim(), body: body.trim(), formUrl: formUrl.trim() };
-      saveData(); renderAdminLists();
+      saveData();
+      renderAdminLists();
     }
 
-    function addSchedule() {
-      const date = document.getElementById("adminScheduleDate").value;
-      const title = document.getElementById("adminScheduleTitle").value.trim();
-      if (!date || !title) return alert("日付とタイトルを入力してください");
-      data.schedules.push({ date, title, place: document.getElementById("adminSchedulePlace").value.trim(), type: document.getElementById("adminScheduleType").value, participants: 0, joined: false });
-      ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
-      saveData(); renderAdminLists();
-    }
-    function deleteSchedule(i) { data.schedules.splice(i,1); saveData(); renderAdminLists(); }
-
-    function editSchedule(i) {
-      const s = data.schedules[i];
-      const title = prompt("タイトルを編集してください", s.title);
-      if (title === null) return;
-      const date = prompt("日付を編集してください（例：2026-06-01）", s.date);
-      if (date === null) return;
-      const place = prompt("場所を編集してください", s.place || "");
-      if (place === null) return;
-      data.schedules[i] = { ...s, title: title.trim(), date: date.trim(), place: place.trim() };
-      saveData(); renderAdminLists();
+    function deleteNotice(i) {
+      if (typeof window.firebaseDeleteNotice === "function") window.firebaseDeleteNotice(i);
+      data.notices.splice(i, 1);
+      saveData();
+      renderAdminLists();
     }
 
     function addFaq() {
       const q = document.getElementById("adminFaqQuestion").value.trim();
       const a = document.getElementById("adminFaqAnswer").value.trim();
       if (!q || !a) return alert("質問と回答を入力してください");
-      data.faqs.push({ category: document.getElementById("adminFaqCategory").value, q, a });
+      const faq = { category: document.getElementById("adminFaqCategory").value, q, a };
+      data.faqs.push(faq);
+      if (typeof window.firebaseSaveFaq === "function") window.firebaseSaveFaq(faq);
       ["adminFaqQuestion","adminFaqAnswer"].forEach(id => document.getElementById(id).value = "");
-      saveData(); renderAdminLists();
+      saveData();
+      renderAdminLists();
     }
-    function deleteFaq(i) { data.faqs.splice(i,1); saveData(); renderAdminLists(); }
 
-    function editFaq(i) {
-      const f = data.faqs[i];
-      const q = prompt("質問を編集してください", f.q);
-      if (q === null) return;
-      const a = prompt("回答を編集してください", f.a);
-      if (a === null) return;
-      data.faqs[i] = { ...f, q: q.trim(), a: a.trim() };
-      saveData(); renderAdminLists();
+    function deleteFaq(i) {
+      if (typeof window.firebaseDeleteFaq === "function") window.firebaseDeleteFaq(i);
+      data.faqs.splice(i, 1);
+      saveData();
+      renderAdminLists();
     }
 
     function fillAdminSettings() {
@@ -872,36 +788,14 @@
       data.settings.contactEmail = document.getElementById("adminContactEmail").value.trim();
       data.settings.contactTel = document.getElementById("adminContactTel").value.trim();
       data.settings.contactHours = document.getElementById("adminContactHours").value.trim();
-      saveData(); alert("設定を保存しました");
+      saveData();
+      alert("設定を保存しました");
     }
 
     function renderAdminLists() {
-      document.getElementById("adminNoticeList").innerHTML = data.notices.map((n,i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:8px;">
-          <span style="flex:1;font-size:13px;">${escapeHTML(n.title)}</span>
-          <div style="display:flex;gap:6px;flex-shrink:0;">
-            <button class="btn btn-light btn-small" onclick="editNotice(${i})">✏️ 編集</button>
-            <button class="btn btn-danger btn-small" onclick="deleteNotice(${i})">削除</button>
-          </div>
-        </div>`).join("");
-
-      document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s,i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:8px;">
-          <span style="flex:1;font-size:13px;">${escapeHTML(s.date)} ${escapeHTML(s.title)}</span>
-          <div style="display:flex;gap:6px;flex-shrink:0;">
-            <button class="btn btn-light btn-small" onclick="editSchedule(${i})">✏️ 編集</button>
-            <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button>
-          </div>
-        </div>`).join("");
-
-      document.getElementById("adminFaqList").innerHTML = data.faqs.map((f,i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:8px;">
-          <span style="flex:1;font-size:13px;">${escapeHTML(f.category)}：${escapeHTML(f.q)}</span>
-          <div style="display:flex;gap:6px;flex-shrink:0;">
-            <button class="btn btn-light btn-small" onclick="editFaq(${i})">✏️ 編集</button>
-            <button class="btn btn-danger btn-small" onclick="deleteFaq(${i})">削除</button>
-          </div>
-        </div>`).join("");
+      document.getElementById("adminNoticeList").innerHTML = data.notices.map((n,i) => `<div class="sidebar-item">${escapeHTML(n.title)} <button class="btn btn-danger btn-small" onclick="deleteNotice(${i})">削除</button></div>`).join("");
+      document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s,i) => `<div class="sidebar-item">${escapeHTML(s.date)} ${escapeHTML(s.title)} <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button></div>`).join("");
+      document.getElementById("adminFaqList").innerHTML = data.faqs.map((f,i) => `<div class="sidebar-item">${escapeHTML(f.category)}：${escapeHTML(f.q)} <button class="btn btn-danger btn-small" onclick="deleteFaq(${i})">削除</button></div>`).join("");
     }
 
     function resetAllData() {
@@ -913,42 +807,89 @@
       renderAdminLists();
     }
 
-    function renderAll() {
-      renderNotices(); renderSchedules(); renderMaterials();
-      renderFaq(); renderMembers(); renderContact(); renderSideEvents();
-    }
+    function renderAll() { renderNotices(); renderBoard(); renderSchedules(); renderMaterials(); renderFaq(); renderMembers(); renderContact(); renderSideEvents(); }
 
-    // 初期表示
+    window.data = data;
+    window.renderBoard = renderBoard;
+    window.renderNotices = renderNotices;
+    window.renderMembers = renderMembers;
+    window.renderSchedules = renderSchedules;
+    window.renderSideEvents = renderSideEvents;
+    window.renderFaq = renderFaq;
+
     renderAll();
-    loadBoardPosts(); // 掲示板タブ用に初回も読み込む
+    if (location.hash === "#admin") showTab("admin");
 
-    // パスワード画面
-    function checkPassword() {
-      const password = document.getElementById("sitePassword").value;
-      if (password === "study2026") {
-        document.getElementById("passwordOverlay").style.display = "none";
-        localStorage.setItem("siteAccess", "ok");
+function checkPassword() {
+  const password = document.getElementById("sitePassword").value;
+  const correctPassword = "study2026";
+  if (password === correctPassword) {
+    document.getElementById("passwordOverlay").style.display = "none";
+    localStorage.setItem("siteAccess", "ok");
+    const authOv = document.getElementById("authOverlay");
+    if (authOv) authOv.style.display = "flex";
+  } else {
+    document.getElementById("passwordError").style.display = "block";
+  }
+}
+    async function sendAuthEmail() {
+      const email = document.getElementById("authEmail").value.trim();
+      const btn   = document.getElementById("sendEmailBtn");
+      const msg   = document.getElementById("authMessage");
+      const err   = document.getElementById("authError");
+      msg.style.display = "none";
+      err.style.display = "none";
+      btn.disabled = true;
+      btn.textContent = "送信中...";
+      const result = await window.firebaseSendEmailLink(email);
+      if (result) {
+        msg.style.display = "block";
+        btn.textContent = "送信済み ✓";
       } else {
-        document.getElementById("passwordError").style.display = "block";
+        err.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "認証メールを送る";
       }
     }
 
-    window.addEventListener("load", () => {
-      if (localStorage.getItem("siteAccess") === "ok") {
-        document.getElementById("passwordOverlay").style.display = "none";
-      }
-    });
+window.addEventListener("load", () => {
+  if (localStorage.getItem("siteAccess") !== "ok") {
+    document.getElementById("passwordOverlay").style.display = "flex";
+  }
+  // authOverlayの表示はfirebase.jsのonAuthStateChangedが制御するため
+  // ここでは何もしない
+});
   </script>
 
-  <!-- パスワード画面 -->
-  <div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;justify-content:center;align-items:center;z-index:9999;">
+  <!-- 合言葉オーバーレイ -->
+  <div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:none;justify-content:center;align-items:center;z-index:9999;">
     <div class="card" style="max-width:400px;width:90%;text-align:center;">
       <h2 style="margin-bottom:10px;">📘 学習会ポータル</h2>
       <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
-      <input type="password" id="sitePassword" placeholder="合言葉" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
-      <button class="btn" onclick="checkPassword()">入室する</button>
+      <input type="password" id="sitePassword" placeholder="合言葉"
+        style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
+      <button class="btn" onclick="checkPassword()">次へ</button>
       <p id="passwordError" style="color:red;margin-top:10px;display:none;">合言葉が違います</p>
     </div>
   </div>
+
+<!-- メールリンク認証オーバーレイ -->
+<div id="authOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:none;justify-content:center;align-items:center;z-index:9999;">
+  <div class="card" style="max-width:400px;width:90%;text-align:center;">
+    <h2 style="margin-bottom:10px;">📘 近大メールで認証</h2>
+    <p class="muted" style="margin-bottom:6px;">近畿大学のメールアドレスを入力してください</p>
+    <p class="muted" style="margin-bottom:20px;font-size:12px;">@kindai.ac.jp のみ利用できます</p>
+    <input type="email" id="authEmail" placeholder="xxx@kindai.ac.jp"
+      style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
+    <button class="btn" onclick="sendAuthEmail()" id="sendEmailBtn">認証メールを送る</button>
+    <p id="authMessage" style="margin-top:14px;font-size:14px;display:none;color:#2c5282;">
+      📧 メールを送信しました！<br>届いたリンクをクリックしてください。<br><br>
+      <span style="font-size:12px;color:#6b7280;">⚠️ 迷惑メールフォルダもご確認ください。<br>送信元：noreply@osaka-info-gakusyukai.firebaseapp.com</span>
+    </p>
+    <p id="authError" style="color:red;margin-top:10px;display:none;">送信に失敗しました。もう一度お試しください。</p>
+  </div>
+</div>
+
+  <script type="module" src="./firebase.js"></script>
 </body>
 </html>
