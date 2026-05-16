@@ -1,3 +1,5 @@
+2026.5.16  12:36
+①index 
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -473,6 +475,13 @@ function loadData() {
       return String(str || "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
     }
 
+    function autoLink(text) {
+  return text.replace(
+    /(https?:\/\/[^\s]+)/g,
+    '<a href="$1" target="_blank">$1</a>'
+  );
+}
+
     function showTab(name, btn) {
       document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
       const tab = document.getElementById(name + "Tab");
@@ -497,7 +506,9 @@ function loadData() {
         <div class="notice-card ${n.pinned ? "pinned" : "normal"}">
           <div class="inline"><span class="badge ${typeClass(n.type)}">${escapeHTML(n.type)}</span>${n.pinned ? '<span class="badge badge-important">📌 ピン留め</span>' : ''}<span class="muted">${escapeHTML(n.created || "")}</span></div>
           <div class="title">${escapeHTML(n.title)}</div>
-          <div class="body-text">${escapeHTML(n.body)}</div>
+          <div class="body-text">
+  ${autoLink(escapeHTML(n.body))}
+</div>
           ${n.type === "イベント" && n.formUrl ? `<a class="btn btn-small" href="${escapeHTML(n.formUrl)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">申し込みはこちら</a>` : ""}
         </div>
       `).join("");
@@ -573,7 +584,9 @@ function loadData() {
         ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
       </div>
       <div class="title">${escapeHTML(p.title)}</div>
-      <div class="body-text">${escapeHTML(p.body)}</div>
+      <div class="body-text">
+  ${autoLink(escapeHTML(p.body))}
+</div>
       <div class="post-actions">
         <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
         ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
@@ -604,9 +617,9 @@ function loadData() {
       if (typeof window.firebaseSaveSchedule === "function") window.firebaseSaveSchedule(schedule);
       ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
       saveData();
+       
       renderAdminLists();
     }
-
     function joinSchedule(i) {
       if (data.schedules[i].joined) return;
       data.schedules[i].participants++;
@@ -620,7 +633,34 @@ function loadData() {
       data.schedules.splice(i, 1);
       saveData();
       renderAdminLists();
-    }
+    }function editSchedule(i) {
+
+  const s = data.schedules[i];
+
+  const newTitle = prompt("タイトルを編集", s.title);
+
+  if (newTitle === null) return;
+
+  const newPlace = prompt("場所を編集", s.place);
+
+  if (newPlace === null) return;
+
+  s.title = newTitle;
+  s.place = newPlace;
+
+  saveData();
+
+  if (typeof window.firebaseUpdateSchedule === "function") {
+
+    window.firebaseUpdateSchedule(i, {
+      title: newTitle,
+      place: newPlace
+    });
+
+  }
+
+  renderAdminLists();
+}
 
     function renderSchedules() {
       document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
@@ -754,18 +794,189 @@ function loadData() {
       saveData();
       renderAdminLists();
     }
+function editNotice(i) {
 
-    function addFaq() {
-      const q = document.getElementById("adminFaqQuestion").value.trim();
-      const a = document.getElementById("adminFaqAnswer").value.trim();
-      if (!q || !a) return alert("質問と回答を入力してください");
-      const faq = { category: document.getElementById("adminFaqCategory").value, q, a };
-      data.faqs.push(faq);
-      if (typeof window.firebaseSaveFaq === "function") window.firebaseSaveFaq(faq);
-      ["adminFaqQuestion","adminFaqAnswer"].forEach(id => document.getElementById(id).value = "");
-      saveData();
-      renderAdminLists();
-    }
+  const n = data.notices[i];
+
+  const newTitle = prompt("タイトルを編集", n.title);
+
+  if (newTitle === null) return;
+
+  const newBody = prompt("本文を編集", n.body);
+
+  if (newBody === null) return;
+
+  n.title = newTitle;
+  n.body = newBody;
+
+  saveData();
+
+  if (typeof window.firebaseUpdateNotice === "function") {
+
+window.firebaseUpdateNotice(i, {
+  title: newTitle,
+  body: newBody
+});
+
+  }
+
+  renderAdminLists();
+
+}
+
+function renderAdminLists() {
+
+  document.getElementById("adminNoticeList").innerHTML =
+
+    data.notices.map((n, i) => `
+
+      <div class="sidebar-item">
+
+        ${escapeHTML(n.title)}
+
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
+          <button
+            class="btn btn-light btn-small"
+            onclick="editNotice(${i})">
+            編集
+          </button>
+
+          <button
+            class="btn btn-danger btn-small"
+            onclick="deleteNotice(${i})">
+            削除
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+
+  document.getElementById("adminScheduleList").innerHTML =
+
+    data.schedules.map((s, i) => `
+
+      <div class="sidebar-item">
+
+        <strong>
+          ${escapeHTML(s.date)}
+        </strong>
+
+        <br>
+
+        ${escapeHTML(s.title)}
+
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
+          <button
+            class="btn btn-light btn-small"
+            onclick="editSchedule(${i})">
+            編集
+          </button>
+
+          <button
+            class="btn btn-danger btn-small"
+            onclick="deleteSchedule(${i})">
+            削除
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+
+  document.getElementById("adminFaqList").innerHTML =
+
+    data.faqs.map((f, i) => `
+
+      <div class="sidebar-item">
+
+        <strong>
+          ${escapeHTML(f.category)}
+        </strong>
+
+        <br>
+
+        ${escapeHTML(f.q)}
+
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
+          <button
+            class="btn btn-light btn-small"
+            onclick="editFaq(${i})">
+            編集
+          </button>
+
+          <button
+            class="btn btn-danger btn-small"
+            onclick="deleteFaq(${i})">
+            削除
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+function saveSettings() {
+
+  data.settings.driveUrl =
+    document.getElementById("adminDriveUrl").value.trim() || "#";
+
+  data.settings.driveDesc =
+    document.getElementById("adminDriveDesc").value.trim();
+
+  data.settings.contactEmail =
+    document.getElementById("adminContactEmail").value.trim();
+
+  data.settings.contactTel =
+    document.getElementById("adminContactTel").value.trim();
+
+  data.settings.contactHours =
+    document.getElementById("adminContactHours").value.trim();
+
+  saveData();
+
+  alert("設定を保存しました");
+
+}
+
+
+function resetAllData() {
+
+  const first = confirm(
+    "本当に全データを削除しますか？"
+  );
+
+  if (!first) return;
+
+  const second = confirm(
+    "この操作は元に戻せません。本当に実行しますか？"
+  );
+
+  if (!second) return;
+
+  localStorage.removeItem(STORAGE_KEY);
+
+  data = loadData();
+
+  renderAll();
+
+  fillAdminSettings();
+
+  renderAdminLists();
+
+  alert("初期化しました");
+
+}
 
     function deleteFaq(i) {
       if (typeof window.firebaseDeleteFaq === "function") window.firebaseDeleteFaq(i);
@@ -781,31 +992,35 @@ function loadData() {
       document.getElementById("adminContactTel").value = data.settings.contactTel;
       document.getElementById("adminContactHours").value = data.settings.contactHours;
     }
+function editFaq(i) {
 
-    function saveSettings() {
-      data.settings.driveUrl = document.getElementById("adminDriveUrl").value.trim() || "#";
-      data.settings.driveDesc = document.getElementById("adminDriveDesc").value.trim();
-      data.settings.contactEmail = document.getElementById("adminContactEmail").value.trim();
-      data.settings.contactTel = document.getElementById("adminContactTel").value.trim();
-      data.settings.contactHours = document.getElementById("adminContactHours").value.trim();
-      saveData();
-      alert("設定を保存しました");
-    }
+  const f = data.faqs[i];
 
-    function renderAdminLists() {
-      document.getElementById("adminNoticeList").innerHTML = data.notices.map((n,i) => `<div class="sidebar-item">${escapeHTML(n.title)} <button class="btn btn-danger btn-small" onclick="deleteNotice(${i})">削除</button></div>`).join("");
-      document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s,i) => `<div class="sidebar-item">${escapeHTML(s.date)} ${escapeHTML(s.title)} <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button></div>`).join("");
-      document.getElementById("adminFaqList").innerHTML = data.faqs.map((f,i) => `<div class="sidebar-item">${escapeHTML(f.category)}：${escapeHTML(f.q)} <button class="btn btn-danger btn-small" onclick="deleteFaq(${i})">削除</button></div>`).join("");
-    }
+  const newQ = prompt("質問を編集", f.q);
 
-    function resetAllData() {
-      if (!confirm("全データを初期状態に戻しますか？")) return;
-      localStorage.removeItem(STORAGE_KEY);
-      data = loadData();
-      renderAll();
-      fillAdminSettings();
-      renderAdminLists();
-    }
+  if (newQ === null) return;
+
+  const newA = prompt("回答を編集", f.a);
+
+  if (newA === null) return;
+
+  f.q = newQ;
+  f.a = newA;
+
+  saveData();
+
+  if (typeof window.firebaseUpdateFaq === "function") {
+
+    window.firebaseUpdateFaq(i, {
+      q: newQ,
+      a: newA
+    });
+
+  }
+renderAdminLists();
+
+}
+ 
 
     function renderAll() { renderNotices(); renderBoard(); renderSchedules(); renderMaterials(); renderFaq(); renderMembers(); renderContact(); renderSideEvents(); }
 
@@ -893,3 +1108,5 @@ window.addEventListener("load", () => {
   <script type="module" src="./firebase.js"></script>
 </body>
 </html>
+
+
