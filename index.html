@@ -880,6 +880,8 @@
   }
 
   // window公開（firebase.jsから呼ばれる関数）
+  // ※ window.data はオブジェクト参照で公開するため、
+  //   firebase.jsがwindow.data.boardPosts等を書き換えると即反映される
   window.data = data;
   window.renderBoard = renderBoard;
   window.renderNotices = renderNotices;
@@ -890,6 +892,16 @@
 
   renderAll();
   if (location.hash === "#admin") showTab("admin");
+
+  // authOverlayの初期表示はfirebase.jsのonAuthStateChangedに任せる
+  // ただしfirebase.jsのloadイベント前にページが表示されてしまう問題を防ぐため
+  // 500ms後にまだオーバーレイが制御されていなければ表示する
+  setTimeout(() => {
+    const overlay = document.getElementById("authOverlay");
+    if (overlay && overlay.style.display === "none" && !window.firebaseSignOut) {
+      overlay.style.display = "flex";
+    }
+  }, 2000);
 </script>
 
 <!-- firebase.js（認証・データ同期） -->
