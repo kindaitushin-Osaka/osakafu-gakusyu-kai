@@ -430,7 +430,7 @@
       <div class="form-group">
         <input type="email" id="loginEmail" placeholder="xxxx@kindai.ac.jp" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:12px;">
       </div>
-      <button class="btn" style="width:100%;" onclick="window.firebaseSendEmailLink(document.getElementById('loginEmail').value).then(ok => { document.getElementById('emailError').style.display = ok?'none':'block'; document.getElementById('emailSent').style.display = ok?'block':'none'; })">ログインリンクを送信</button>
+      <button class="btn" style="width:100%;" onclick="sendLoginEmail()">ログインリンクを送信</button>
       <p id="emailError" style="color:var(--red);margin-top:10px;display:none;font-size:13px;">近畿大学のメールアドレスを入力してください</p>
       <p id="emailSent" style="color:var(--green);margin-top:10px;display:none;font-size:13px;">✅ メールを送信しました！メール内のリンクをクリックしてログインしてください。</p>
     </div>
@@ -862,6 +862,21 @@
     renderNotices(); renderBoard(); renderSchedules();
     renderMaterials(); renderFaq(); renderMembers();
     renderContact(); renderSideEvents();
+  }
+
+  // ログインメール送信（firebase.jsのfirebaseSendEmailLinkを呼ぶ）
+  function sendLoginEmail() {
+    const email = document.getElementById("loginEmail").value.trim();
+    document.getElementById("emailError").style.display = "none";
+    document.getElementById("emailSent").style.display = "none";
+    if (!window.firebaseSendEmailLink) {
+      alert("読み込み中です。少し待ってから再度お試しください。");
+      return;
+    }
+    window.firebaseSendEmailLink(email).then(ok => {
+      document.getElementById("emailError").style.display = ok ? "none" : "block";
+      document.getElementById("emailSent").style.display = ok ? "block" : "none";
+    });
   }
 
   // window公開（firebase.jsから呼ばれる関数）
