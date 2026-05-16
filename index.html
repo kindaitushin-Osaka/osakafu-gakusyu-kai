@@ -135,7 +135,7 @@
       width: 100%; border: 1px solid #cfd8e3; border-radius: 10px;
       padding: 10px 12px; font-family: inherit; font-size: 14px; background: white;
     }
-    textarea { min-height: 92px; resize: vertical; }
+    textarea { min-height: 160px; resize: vertical; }
     label { font-size: 13px; font-weight: 700; color: #374151; display: block; margin-bottom: 5px; }
     .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .form-group { margin-bottom: 12px; }
@@ -670,6 +670,13 @@
     // =============================================
     // その他の機能（localStorage）
     // =============================================
+    function autoLink(str) {
+      return escapeHTML(str).replace(
+        /(https?:\/\/[^\s　]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:underline;">$1</a>'
+      );
+    }
+
     function renderNotices() {
       const sorted = [...data.notices].sort((a,b) => Number(b.pinned) - Number(a.pinned));
       document.getElementById("noticeList").innerHTML = sorted.map((n, i) => `
@@ -680,7 +687,7 @@
             <span class="muted">${escapeHTML(n.created || "")}</span>
           </div>
           <div class="title">${escapeHTML(n.title)}</div>
-          <div class="body-text">${escapeHTML(n.body)}</div>
+          <div class="body-text">${autoLink(n.body)}</div>
           ${n.type === "イベント" && n.formUrl ? `<a class="btn btn-small" href="${escapeHTML(n.formUrl)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">📝 申し込みはこちら</a>` : ""}
         </div>
       `).join("");
