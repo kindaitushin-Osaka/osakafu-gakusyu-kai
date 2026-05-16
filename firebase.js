@@ -155,7 +155,16 @@ window.firebaseAddReply = async function (localIndex, replyText) {
     console.error("返信保存失敗:", err);
   }
 };
-
+window.firebaseDeleteBoardPost = async function (localIndex) {
+  const docId = boardIdMap[localIndex];
+  if (!docId) { console.warn("掲示板docId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "boardPosts", docId));
+    console.log("掲示板投稿削除OK");
+  } catch (err) {
+    console.error("掲示板投稿削除失敗:", err);
+  }
+};
 async function initBoardListener() {
   const q = query(collection(db, "boardPosts"), orderBy("created", "desc"));
   onSnapshot(q, async (snapshot) => {
