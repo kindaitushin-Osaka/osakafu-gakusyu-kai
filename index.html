@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <style>
+  <style>
     :root {
       --ink: #1c2b3a;
       --blue: #3b6ea5;
@@ -206,6 +207,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <div class="header-inner">
       <div>
@@ -222,17 +224,20 @@
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('admin', this)">管理</button>
       </nav>
+      <!-- ヘッダー右端：ログイン状態表示＋ログアウトボタン -->
       <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span id="userEmailDisplay" style="color:#b8c7d6;font-size:12px;"></span>
         <button id="logoutBtn" class="btn btn-small"
           style="display:none;background:rgba(255,255,255,.15);font-size:12px;"
-          onclick="window.firebaseSignOut()">ログアウト</button>
+          onclick="localSignOut()">ログアウト</button>
       </div>
     </div>
   </header>
 
   <div class="wrap">
     <main>
+
+      <!-- ▼ お知らせ -->
       <section id="noticeTab" class="tab-content active">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📢 お知らせ</h2><span class="muted">ピン留めは最上部表示</span></div>
@@ -240,6 +245,7 @@
         </div>
       </section>
 
+      <!-- ▼ 掲示板 -->
       <section id="boardTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">💬 掲示板</h2><span class="muted">匿名OK・カテゴリ検索対応</span></div>
@@ -265,6 +271,7 @@
         </div>
       </section>
 
+      <!-- ▼ スケジュール -->
       <section id="scheduleTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📅 スケジュール</h2><span class="muted">参加ボタンつき</span></div>
@@ -272,6 +279,7 @@
         </div>
       </section>
 
+      <!-- ▼ 資料 -->
       <section id="materialsTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📁 資料</h2><span class="muted">Google Driveと大学公式リンク</span></div>
@@ -285,6 +293,7 @@
         </div>
       </section>
 
+      <!-- ▼ FAQ -->
       <section id="faqTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">❓ FAQ</h2><span class="muted">クリックで開閉</span></div>
@@ -292,6 +301,7 @@
         </div>
       </section>
 
+      <!-- ▼ メンバー -->
       <section id="membersTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
@@ -329,6 +339,7 @@
         </div>
       </section>
 
+      <!-- ▼ お問い合わせ -->
       <section id="contactTab" class="tab-content">
         <div class="card">
           <h2 class="section-title">📮 お問い合わせ</h2>
@@ -337,6 +348,7 @@
         </div>
       </section>
 
+      <!-- ▼ 管理 -->
       <section id="adminTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">試作用パスワード：admin1234</span></div>
@@ -398,6 +410,7 @@
           </div>
         </div>
       </section>
+
     </main>
 
     <aside>
@@ -413,6 +426,9 @@
   </footer>
 
   <script>
+    // ============================================================
+    // データ定義
+    // ============================================================
     const STORAGE_KEY = "studyCirclePortalV1";
     let currentBoardFilter = "すべて";
 
@@ -460,12 +476,11 @@
 
     let data = loadData();
 
-function loadData() {
-  // Firestoreから同期するのでローカルデータは使わない
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-  return structuredClone(defaultData);
-}
+    function loadData() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+      return structuredClone(defaultData);
+    }
 
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); renderAll(); }
 
@@ -474,12 +489,58 @@ function loadData() {
     }
 
     function autoLink(text) {
-  return text.replace(
-    /(https?:\/\/[^\s]+)/g,
-    '<a href="$1" target="_blank">$1</a>'
-  );
-}
+      return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    }
 
+    // ============================================================
+    // ① 合言葉ログイン
+    // ============================================================
+
+    function checkPassword() {
+      const password = document.getElementById("sitePassword").value;
+      const correctPassword = "study2026";
+      if (password === correctPassword) {
+        localStorage.setItem("siteAccess", "ok");
+        document.getElementById("passwordOverlay").style.display = "none";
+
+        // ヘッダーに「ログイン中」と表示し、ログアウトボタンを出す
+        const emailDisplay = document.getElementById("userEmailDisplay");
+        if (emailDisplay) emailDisplay.textContent = "ログイン中";
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.style.display = "inline-flex";
+
+        // firebase.js 側のFirestore監視を開始する
+        if (typeof window.startFirestoreListeners === "function") {
+          window.startFirestoreListeners();
+        }
+      } else {
+        document.getElementById("passwordError").style.display = "block";
+      }
+    }
+
+    // ② ログアウト処理
+    function localSignOut() {
+      localStorage.removeItem("siteAccess");
+      location.reload();
+    }
+
+    // ページ読み込み時の処理
+    window.addEventListener("load", () => {
+      if (localStorage.getItem("siteAccess") !== "ok") {
+        // 合言葉がまだ入力されていないので合言葉画面を表示
+        document.getElementById("passwordOverlay").style.display = "flex";
+        return;
+      }
+      // すでに合言葉済み → ヘッダー表示を復元
+      const emailDisplay = document.getElementById("userEmailDisplay");
+      if (emailDisplay) emailDisplay.textContent = "ログイン中";
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.style.display = "inline-flex";
+    });
+
+    // ============================================================
+    // タブ切り替え
+    // ============================================================
     function showTab(name, btn) {
       document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
       const tab = document.getElementById(name + "Tab");
@@ -498,20 +559,24 @@ function loadData() {
       return "badge-info";
     }
 
+    // ============================================================
+    // お知らせ
+    // ============================================================
     function renderNotices() {
       const sorted = [...data.notices].sort((a,b) => Number(b.pinned) - Number(a.pinned));
       document.getElementById("noticeList").innerHTML = sorted.map((n, i) => `
         <div class="notice-card ${n.pinned ? "pinned" : "normal"}">
           <div class="inline"><span class="badge ${typeClass(n.type)}">${escapeHTML(n.type)}</span>${n.pinned ? '<span class="badge badge-important">📌 ピン留め</span>' : ''}<span class="muted">${escapeHTML(n.created || "")}</span></div>
           <div class="title">${escapeHTML(n.title)}</div>
-          <div class="body-text">
-  ${autoLink(escapeHTML(n.body))}
-</div>
+          <div class="body-text">${autoLink(escapeHTML(n.body))}</div>
           ${n.type === "イベント" && n.formUrl ? `<a class="btn btn-small" href="${escapeHTML(n.formUrl)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">申し込みはこちら</a>` : ""}
         </div>
       `).join("");
     }
 
+    // ============================================================
+    // 掲示板
+    // ============================================================
     function setBoardFilter(filter, btn) {
       currentBoardFilter = filter;
       document.querySelectorAll("#boardTab .filter-bar button").forEach(b => b.classList.remove("active"));
@@ -566,41 +631,42 @@ function loadData() {
       if (typeof window.firebaseAddReply === "function") window.firebaseAddReply(i, text);
     }
 
- function renderBoard() {
-  const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
-  const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
-    const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
-    const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
-    return matchCat && matchKey;
-  });
-  document.getElementById("boardList").innerHTML = list.map(p => `
-    <div class="post-card">
-      <div class="inline">
-        <span class="badge badge-info">${escapeHTML(p.category)}</span>
-        <span class="muted">${escapeHTML(p.author)}</span>
-        ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
-        ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
-      </div>
-      <div class="title">${escapeHTML(p.title)}</div>
-      <div class="body-text">
-  ${autoLink(escapeHTML(p.body))}
-</div>
-      <div class="post-actions">
-        <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
-        ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
-        <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
-        <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
-      </div>
-<div class="reply-box">${(p.replies || []).map(r => `
-  <div class="reply-item">
-    💬 ${escapeHTML(typeof r === 'string' ? r : r.text || '')}
-    ${(typeof r === 'object' && r.created) ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
-  </div>`).join("")}
-</div>
-    </div>
-  `).join("") || '<div class="muted">該当する投稿はありません。</div>';
-}
+    function renderBoard() {
+      const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
+      const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
+        const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
+        const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
+        return matchCat && matchKey;
+      });
+      document.getElementById("boardList").innerHTML = list.map(p => `
+        <div class="post-card">
+          <div class="inline">
+            <span class="badge badge-info">${escapeHTML(p.category)}</span>
+            <span class="muted">${escapeHTML(p.author)}</span>
+            ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
+            ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
+          </div>
+          <div class="title">${escapeHTML(p.title)}</div>
+          <div class="body-text">${autoLink(escapeHTML(p.body))}</div>
+          <div class="post-actions">
+            <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
+            ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
+            <button class="btn btn-ghost btn-small" onclick="addReply(${p._index})">返信</button>
+            <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
+          </div>
+          <div class="reply-box">${(p.replies || []).map(r => `
+            <div class="reply-item">
+              💬 ${escapeHTML(typeof r === 'string' ? r : r.text || '')}
+              ${(typeof r === 'object' && r.created) ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(r.created)}</span>` : ''}
+            </div>`).join("")}
+          </div>
+        </div>
+      `).join("") || '<div class="muted">該当する投稿はありません。</div>';
+    }
 
+    // ============================================================
+    // スケジュール
+    // ============================================================
     function addSchedule() {
       const date  = document.getElementById("adminScheduleDate").value;
       const title = document.getElementById("adminScheduleTitle").value.trim();
@@ -615,9 +681,9 @@ function loadData() {
       if (typeof window.firebaseSaveSchedule === "function") window.firebaseSaveSchedule(schedule);
       ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
       saveData();
-       
       renderAdminLists();
     }
+
     function joinSchedule(i) {
       if (data.schedules[i].joined) return;
       data.schedules[i].participants++;
@@ -631,34 +697,22 @@ function loadData() {
       data.schedules.splice(i, 1);
       saveData();
       renderAdminLists();
-    }function editSchedule(i) {
+    }
 
-  const s = data.schedules[i];
-
-  const newTitle = prompt("タイトルを編集", s.title);
-
-  if (newTitle === null) return;
-
-  const newPlace = prompt("場所を編集", s.place);
-
-  if (newPlace === null) return;
-
-  s.title = newTitle;
-  s.place = newPlace;
-
-  saveData();
-
-  if (typeof window.firebaseUpdateSchedule === "function") {
-
-    window.firebaseUpdateSchedule(i, {
-      title: newTitle,
-      place: newPlace
-    });
-
-  }
-
-  renderAdminLists();
-}
+    function editSchedule(i) {
+      const s = data.schedules[i];
+      const newTitle = prompt("タイトルを編集", s.title);
+      if (newTitle === null) return;
+      const newPlace = prompt("場所を編集", s.place);
+      if (newPlace === null) return;
+      s.title = newTitle;
+      s.place = newPlace;
+      saveData();
+      if (typeof window.firebaseUpdateSchedule === "function") {
+        window.firebaseUpdateSchedule(i, { title: newTitle, place: newPlace });
+      }
+      renderAdminLists();
+    }
 
     function renderSchedules() {
       document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
@@ -669,6 +723,9 @@ function loadData() {
       }).join("");
     }
 
+    // ============================================================
+    // 資料
+    // ============================================================
     function renderMaterials() {
       document.getElementById("driveLink").href = data.settings.driveUrl;
       document.getElementById("driveDescription").textContent = data.settings.driveDesc;
@@ -686,11 +743,22 @@ function loadData() {
       document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x => `<a class="sidebar-item side-link" href="${x.url}" target="_blank">${x.name}</a>`).join("");
     }
 
+    // ============================================================
+    // FAQ
+    // ============================================================
     function toggleFaq(el) { el.classList.toggle("open"); }
+
     function renderFaq() {
-      document.getElementById("faqList").innerHTML = data.faqs.map(f => `<div class="faq-card" onclick="toggleFaq(this)"><div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div><div class="faq-answer">${escapeHTML(f.a)}</div></div>`).join("");
+      document.getElementById("faqList").innerHTML = data.faqs.map(f => `
+        <div class="faq-card" onclick="toggleFaq(this)">
+          <div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div>
+          <div class="faq-answer">${escapeHTML(f.a)}</div>
+        </div>`).join("");
     }
 
+    // ============================================================
+    // メンバー
+    // ============================================================
     function addMember() {
       const name = document.getElementById("memberName").value.trim();
       if (!name) return alert("ニックネームを入力してください");
@@ -746,16 +814,27 @@ function loadData() {
       `).join("");
     }
 
+    // ============================================================
+    // お問い合わせ・フッター
+    // ============================================================
     function renderContact() {
       const html = `メール：${escapeHTML(data.settings.contactEmail)}<br>TEL：${escapeHTML(data.settings.contactTel)}<br>受付時間：${escapeHTML(data.settings.contactHours)}`;
       document.getElementById("contactInfo").innerHTML = html;
       document.getElementById("footerContact").innerHTML = `学習内容・履修・試験については大学事務局へお問い合わせください。<br>${html}`;
     }
 
+    // ============================================================
+    // サイドバー
+    // ============================================================
     function renderSideEvents() {
-      document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `<div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}</div>`).join("");
+      document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `
+        <div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}</div>
+      `).join("");
     }
 
+    // ============================================================
+    // 管理ページ
+    // ============================================================
     function loginAdmin() {
       if (document.getElementById("adminPass").value !== "admin1234") return alert("パスワードが違います");
       document.getElementById("adminLogin").style.display = "none";
@@ -765,7 +844,10 @@ function loadData() {
       renderAdminLists();
     }
 
-    function todayStr() { const d = new Date(); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; }
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    }
 
     function addNotice() {
       const title = document.getElementById("adminNoticeTitle").value.trim();
@@ -792,192 +874,79 @@ function loadData() {
       saveData();
       renderAdminLists();
     }
-function editNotice(i) {
 
-  const n = data.notices[i];
+    function editNotice(i) {
+      const n = data.notices[i];
+      const newTitle = prompt("タイトルを編集", n.title);
+      if (newTitle === null) return;
+      const newBody = prompt("本文を編集", n.body);
+      if (newBody === null) return;
+      n.title = newTitle;
+      n.body = newBody;
+      saveData();
+      if (typeof window.firebaseUpdateNotice === "function") {
+        window.firebaseUpdateNotice(i, { title: newTitle, body: newBody });
+      }
+      renderAdminLists();
+    }
 
-  const newTitle = prompt("タイトルを編集", n.title);
-
-  if (newTitle === null) return;
-
-  const newBody = prompt("本文を編集", n.body);
-
-  if (newBody === null) return;
-
-  n.title = newTitle;
-  n.body = newBody;
-
-  saveData();
-
-  if (typeof window.firebaseUpdateNotice === "function") {
-
-window.firebaseUpdateNotice(i, {
-  title: newTitle,
-  body: newBody
-});
-
-  }
-
-  renderAdminLists();
-
-}
-
-function renderAdminLists() {
-
-  document.getElementById("adminNoticeList").innerHTML =
-
-    data.notices.map((n, i) => `
-
-      <div class="sidebar-item">
-
-        ${escapeHTML(n.title)}
-
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-
-          <button
-            class="btn btn-light btn-small"
-            onclick="editNotice(${i})">
-            編集
-          </button>
-
-          <button
-            class="btn btn-danger btn-small"
-            onclick="deleteNotice(${i})">
-            削除
-          </button>
-
+    function renderAdminLists() {
+      document.getElementById("adminNoticeList").innerHTML = data.notices.map((n, i) => `
+        <div class="sidebar-item">
+          ${escapeHTML(n.title)}
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-light btn-small" onclick="editNotice(${i})">編集</button>
+            <button class="btn btn-danger btn-small" onclick="deleteNotice(${i})">削除</button>
+          </div>
         </div>
+      `).join("");
 
-      </div>
-
-    `).join("");
-
-
-
-  document.getElementById("adminScheduleList").innerHTML =
-
-    data.schedules.map((s, i) => `
-
-      <div class="sidebar-item">
-
-        <strong>
-          ${escapeHTML(s.date)}
-        </strong>
-
-        <br>
-
-        ${escapeHTML(s.title)}
-
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-
-          <button
-            class="btn btn-light btn-small"
-            onclick="editSchedule(${i})">
-            編集
-          </button>
-
-          <button
-            class="btn btn-danger btn-small"
-            onclick="deleteSchedule(${i})">
-            削除
-          </button>
-
+      document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s, i) => `
+        <div class="sidebar-item">
+          <strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-light btn-small" onclick="editSchedule(${i})">編集</button>
+            <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button>
+          </div>
         </div>
+      `).join("");
 
-      </div>
-
-    `).join("");
-
-
-
-  document.getElementById("adminFaqList").innerHTML =
-
-    data.faqs.map((f, i) => `
-
-      <div class="sidebar-item">
-
-        <strong>
-          ${escapeHTML(f.category)}
-        </strong>
-
-        <br>
-
-        ${escapeHTML(f.q)}
-
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-
-          <button
-            class="btn btn-light btn-small"
-            onclick="editFaq(${i})">
-            編集
-          </button>
-
-          <button
-            class="btn btn-danger btn-small"
-            onclick="deleteFaq(${i})">
-            削除
-          </button>
-
+      document.getElementById("adminFaqList").innerHTML = data.faqs.map((f, i) => `
+        <div class="sidebar-item">
+          <strong>${escapeHTML(f.category)}</strong><br>${escapeHTML(f.q)}
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-light btn-small" onclick="editFaq(${i})">編集</button>
+            <button class="btn btn-danger btn-small" onclick="deleteFaq(${i})">削除</button>
+          </div>
         </div>
+      `).join("");
+    }
 
-      </div>
+    // ③ 設定保存（Firebase同期つき）
+    function saveSettings() {
+      data.settings.driveUrl      = document.getElementById("adminDriveUrl").value.trim() || "#";
+      data.settings.driveDesc     = document.getElementById("adminDriveDesc").value.trim();
+      data.settings.contactEmail  = document.getElementById("adminContactEmail").value.trim();
+      data.settings.contactTel    = document.getElementById("adminContactTel").value.trim();
+      data.settings.contactHours  = document.getElementById("adminContactHours").value.trim();
+      saveData();
+      // Firebaseにも保存
+      if (typeof window.firebaseSaveSettings === "function") {
+        window.firebaseSaveSettings(data.settings);
+      }
+      alert("設定を保存しました");
+    }
 
-    `).join("");
-
-}
-
-function saveSettings() {
-
-  data.settings.driveUrl =
-    document.getElementById("adminDriveUrl").value.trim() || "#";
-
-  data.settings.driveDesc =
-    document.getElementById("adminDriveDesc").value.trim();
-
-  data.settings.contactEmail =
-    document.getElementById("adminContactEmail").value.trim();
-
-  data.settings.contactTel =
-    document.getElementById("adminContactTel").value.trim();
-
-  data.settings.contactHours =
-    document.getElementById("adminContactHours").value.trim();
-
-  saveData();
-
-  alert("設定を保存しました");
-
-}
-
-
-
-function resetAllData() {
-
-  const first = confirm(
-    "本当に全データを削除しますか？"
-  );
-
-  if (!first) return;
-
-  const second = confirm(
-    "この操作は元に戻せません。本当に実行しますか？"
-  );
-
-  if (!second) return;
-
-  localStorage.removeItem(STORAGE_KEY);
-
-  data = loadData();
-
-  renderAll();
-
-  fillAdminSettings();
-
-  renderAdminLists();
-
-  alert("初期化しました");
-
-}
+    function resetAllData() {
+      if (!confirm("本当に全データを削除しますか？")) return;
+      if (!confirm("この操作は元に戻せません。本当に実行しますか？")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      data = loadData();
+      renderAll();
+      fillAdminSettings();
+      renderAdminLists();
+      alert("初期化しました");
+    }
 
     function deleteFaq(i) {
       if (typeof window.firebaseDeleteFaq === "function") window.firebaseDeleteFaq(i);
@@ -986,126 +955,89 @@ function resetAllData() {
       renderAdminLists();
     }
 
+    function editFaq(i) {
+      const f = data.faqs[i];
+      const newQ = prompt("質問を編集", f.q);
+      if (newQ === null) return;
+      const newA = prompt("回答を編集", f.a);
+      if (newA === null) return;
+      f.q = newQ;
+      f.a = newA;
+      saveData();
+      if (typeof window.firebaseUpdateFaq === "function") {
+        window.firebaseUpdateFaq(i, { q: newQ, a: newA });
+      }
+      renderAdminLists();
+    }
+
+    function addFaq() {
+      const category = document.getElementById("adminFaqCategory").value;
+      const q = document.getElementById("adminFaqQuestion").value.trim();
+      const a = document.getElementById("adminFaqAnswer").value.trim();
+      if (!q || !a) return alert("質問と回答を入力してください");
+      const faq = { category, q, a };
+      data.faqs.push(faq);
+      if (typeof window.firebaseSaveFaq === "function") window.firebaseSaveFaq(faq);
+      document.getElementById("adminFaqQuestion").value = "";
+      document.getElementById("adminFaqAnswer").value = "";
+      saveData();
+      renderAdminLists();
+    }
+
     function fillAdminSettings() {
-      document.getElementById("adminDriveUrl").value = data.settings.driveUrl;
-      document.getElementById("adminDriveDesc").value = data.settings.driveDesc;
+      document.getElementById("adminDriveUrl").value    = data.settings.driveUrl;
+      document.getElementById("adminDriveDesc").value   = data.settings.driveDesc;
       document.getElementById("adminContactEmail").value = data.settings.contactEmail;
-      document.getElementById("adminContactTel").value = data.settings.contactTel;
+      document.getElementById("adminContactTel").value  = data.settings.contactTel;
       document.getElementById("adminContactHours").value = data.settings.contactHours;
     }
-function editFaq(i) {
 
-  const f = data.faqs[i];
+    // ============================================================
+    // 全体レンダリング
+    // ============================================================
+    function renderAll() {
+      renderNotices();
+      renderBoard();
+      renderSchedules();
+      renderMaterials();
+      renderFaq();
+      renderMembers();
+      renderContact();
+      renderSideEvents();
+    }
 
-  const newQ = prompt("質問を編集", f.q);
-
-  if (newQ === null) return;
-
-  const newA = prompt("回答を編集", f.a);
-
-  if (newA === null) return;
-
-  f.q = newQ;
-  f.a = newA;
-
-  saveData();
-
-  if (typeof window.firebaseUpdateFaq === "function") {
-
-    window.firebaseUpdateFaq(i, {
-      q: newQ,
-      a: newA
-    });
-
-  }
-renderAdminLists();
-
-}
- 
-
-    function renderAll() { renderNotices(); renderBoard(); renderSchedules(); renderMaterials(); renderFaq(); renderMembers(); renderContact(); renderSideEvents(); }
-
-    window.data = data;
-    window.renderBoard = renderBoard;
-    window.renderNotices = renderNotices;
-    window.renderMembers = renderMembers;
+    // グローバル公開（firebase.js から呼び出せるように）
+    window.data           = data;
+    window.renderBoard    = renderBoard;
+    window.renderNotices  = renderNotices;
+    window.renderMembers  = renderMembers;
     window.renderSchedules = renderSchedules;
     window.renderSideEvents = renderSideEvents;
-    window.renderFaq = renderFaq;
+    window.renderFaq      = renderFaq;
+    window.renderMaterials = renderMaterials;
+    window.renderContact  = renderContact;
 
     renderAll();
     if (location.hash === "#admin") showTab("admin");
-
-function checkPassword() {
-  const password = document.getElementById("sitePassword").value;
-  const correctPassword = "study2026";
-  if (password === correctPassword) {
-    document.getElementById("passwordOverlay").style.display = "none";
-    localStorage.setItem("siteAccess", "ok");
-    const authOv = document.getElementById("authOverlay");
-    if (authOv) authOv.style.display = "flex";
-  } else {
-    document.getElementById("passwordError").style.display = "block";
-  }
-}
-    async function sendAuthEmail() {
-      const email = document.getElementById("authEmail").value.trim();
-      const btn   = document.getElementById("sendEmailBtn");
-      const msg   = document.getElementById("authMessage");
-      const err   = document.getElementById("authError");
-      msg.style.display = "none";
-      err.style.display = "none";
-      btn.disabled = true;
-      btn.textContent = "送信中...";
-      const result = await window.firebaseSendEmailLink(email);
-      if (result) {
-        msg.style.display = "block";
-        btn.textContent = "送信済み ✓";
-      } else {
-        err.style.display = "block";
-        btn.disabled = false;
-        btn.textContent = "認証メールを送る";
-      }
-    }
-
-window.addEventListener("load", () => {
-  if (localStorage.getItem("siteAccess") !== "ok") {
-    document.getElementById("passwordOverlay").style.display = "flex";
-  }
-  // authOverlayの表示はfirebase.jsのonAuthStateChangedが制御するため
-  // ここでは何もしない
-});
   </script>
 
-  <!-- 合言葉オーバーレイ -->
-  <div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:none;justify-content:center;align-items:center;z-index:9999;">
+  <!-- ▼ 合言葉オーバーレイ -->
+  <div id="passwordOverlay"
+    style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);
+           display:none;justify-content:center;align-items:center;z-index:9999;">
     <div class="card" style="max-width:400px;width:90%;text-align:center;">
       <h2 style="margin-bottom:10px;">📘 学習会ポータル</h2>
       <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
       <input type="password" id="sitePassword" placeholder="合言葉"
-        style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
-      <button class="btn" onclick="checkPassword()">次へ</button>
+        style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;"
+        onkeydown="if(event.key==='Enter') checkPassword()">
+      <button class="btn" onclick="checkPassword()">入室する</button>
       <p id="passwordError" style="color:red;margin-top:10px;display:none;">合言葉が違います</p>
     </div>
   </div>
 
-<!-- メールリンク認証オーバーレイ -->
-<div id="authOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:none;justify-content:center;align-items:center;z-index:9999;">
-  <div class="card" style="max-width:400px;width:90%;text-align:center;">
-    <h2 style="margin-bottom:10px;">📘 近大メールで認証</h2>
-    <p class="muted" style="margin-bottom:6px;">近畿大学のメールアドレスを入力してください</p>
-    <p class="muted" style="margin-bottom:20px;font-size:12px;">@kindai.ac.jp のみ利用できます</p>
-    <input type="email" id="authEmail" placeholder="xxx@kindai.ac.jp"
-      style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
-    <button class="btn" onclick="sendAuthEmail()" id="sendEmailBtn">認証メールを送る</button>
-    <p id="authMessage" style="margin-top:14px;font-size:14px;display:none;color:#2c5282;">
-      📧 メールを送信しました！<br>届いたリンクをクリックしてください。<br><br>
-      <span style="font-size:12px;color:#6b7280;">⚠️ 迷惑メールフォルダもご確認ください。<br>送信元：noreply@osaka-info-gakusyukai.firebaseapp.com</span>
-    </p>
-    <p id="authError" style="color:red;margin-top:10px;display:none;">送信に失敗しました。もう一度お試しください。</p>
-  </div>
-</div>
-
+  <!-- firebase.js を最後に読み込む -->
   <script type="module" src="./firebase.js"></script>
+
 </body>
 </html>
