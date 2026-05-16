@@ -100,7 +100,6 @@ window.firebaseSignOut = async function () {
   try {
     await signOut(auth);
     localStorage.removeItem("emailForSignIn");
-    localStorage.removeItem("siteAccess");
     location.reload();
   } catch (err) {
     console.error("ログアウト失敗:", err);
