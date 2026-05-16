@@ -912,12 +912,14 @@
   }
 
   function resetAllData() {
-    if (!confirm("全データを初期状態に戻しますか？")) return;
+    if (!confirm("⚠️ 本当に全データを初期化しますか？\nこの操作は元に戻せません。")) return;
+    if (!confirm("🚨 最終確認です。\n本当に初期化してよいですか？")) return;
     localStorage.removeItem(STORAGE_KEY);
     data = loadData();
     renderAll();
     fillAdminSettings();
     renderAdminLists();
+    alert("初期化しました。");
   }
 
   function renderAll() {
