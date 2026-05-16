@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -183,6 +182,30 @@
     }
     .admin-secret { color: #8fa3b8; cursor: pointer; text-decoration: underline; }
 
+    /* ログインオーバーレイ共通スタイル */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg); display: none;
+      justify-content: center; align-items: center; z-index: 9999;
+    }
+    .overlay-card {
+      max-width: 400px; width: 90%; text-align: center;
+      background: var(--white); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px 24px;
+    }
+    .overlay-card h2 { margin-bottom: 8px; }
+    .overlay-card .step-badge {
+      display: inline-block; background: var(--blue-light); color: var(--blue-dark);
+      font-size: 12px; font-weight: 700; padding: 3px 12px;
+      border-radius: 999px; margin-bottom: 16px;
+    }
+    .overlay-input {
+      width: 100%; padding: 12px; border-radius: 10px;
+      border: 1px solid #ccc; margin-bottom: 14px;
+      font-family: inherit; font-size: 14px;
+    }
+    .overlay-error { color: red; margin-top: 10px; display: none; font-size: 13px; }
+
     @media (max-width: 900px) {
       .wrap { grid-template-columns: 1fr; padding: 16px; }
       aside { order: -1; }
@@ -224,7 +247,7 @@
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('admin', this)">管理</button>
       </nav>
-      <!-- ヘッダー右端：ログイン状態表示＋ログアウトボタン -->
+      <!-- ② ヘッダー右端：ログインメール表示＋ログアウトボタン -->
       <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span id="userEmailDisplay" style="color:#b8c7d6;font-size:12px;"></span>
         <button id="logoutBtn" class="btn btn-small"
@@ -237,7 +260,7 @@
   <div class="wrap">
     <main>
 
-      <!-- ▼ お知らせ -->
+      <!-- お知らせ -->
       <section id="noticeTab" class="tab-content active">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📢 お知らせ</h2><span class="muted">ピン留めは最上部表示</span></div>
@@ -245,7 +268,7 @@
         </div>
       </section>
 
-      <!-- ▼ 掲示板 -->
+      <!-- 掲示板 -->
       <section id="boardTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">💬 掲示板</h2><span class="muted">匿名OK・カテゴリ検索対応</span></div>
@@ -271,7 +294,7 @@
         </div>
       </section>
 
-      <!-- ▼ スケジュール -->
+      <!-- スケジュール -->
       <section id="scheduleTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📅 スケジュール</h2><span class="muted">参加ボタンつき</span></div>
@@ -279,7 +302,7 @@
         </div>
       </section>
 
-      <!-- ▼ 資料 -->
+      <!-- 資料 -->
       <section id="materialsTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">📁 資料</h2><span class="muted">Google Driveと大学公式リンク</span></div>
@@ -293,7 +316,7 @@
         </div>
       </section>
 
-      <!-- ▼ FAQ -->
+      <!-- FAQ -->
       <section id="faqTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">❓ FAQ</h2><span class="muted">クリックで開閉</span></div>
@@ -301,7 +324,7 @@
         </div>
       </section>
 
-      <!-- ▼ メンバー -->
+      <!-- メンバー -->
       <section id="membersTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
@@ -339,7 +362,7 @@
         </div>
       </section>
 
-      <!-- ▼ お問い合わせ -->
+      <!-- お問い合わせ -->
       <section id="contactTab" class="tab-content">
         <div class="card">
           <h2 class="section-title">📮 お問い合わせ</h2>
@@ -348,7 +371,7 @@
         </div>
       </section>
 
-      <!-- ▼ 管理 -->
+      <!-- 管理 -->
       <section id="adminTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">試作用パスワード：admin1234</span></div>
@@ -425,6 +448,46 @@
     <div style="margin-top:8px;"><span class="admin-secret" onclick="showTab('admin')">管理ページ</span></div>
   </footer>
 
+  <!-- ============================================================
+       ① STEP1：近大メール入力オーバーレイ
+  ============================================================ -->
+  <div id="emailOverlay" class="overlay">
+    <div class="overlay-card">
+      <h2>📘 学習会ポータル</h2>
+      <div class="step-badge">STEP 1 / 2　メールアドレス確認</div>
+      <p class="muted" style="margin-bottom:20px;">
+        近畿大学のメールアドレスを入力してください<br>
+        <span style="font-size:12px;">（@kindai.ac.jp のみ入室できます）</span>
+      </p>
+      <input type="email" id="loginEmail" class="overlay-input"
+        placeholder="xxx@kindai.ac.jp"
+        onkeydown="if(event.key==='Enter') checkEmail()">
+      <button class="btn" style="width:100%;" onclick="checkEmail()">次へ →</button>
+      <p id="emailError" class="overlay-error">@kindai.ac.jp のアドレスを入力してください</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ① STEP2：合言葉入力オーバーレイ
+  ============================================================ -->
+  <div id="passwordOverlay" class="overlay">
+    <div class="overlay-card">
+      <h2>📘 学習会ポータル</h2>
+      <div class="step-badge">STEP 2 / 2　合言葉確認</div>
+      <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
+      <input type="password" id="sitePassword" class="overlay-input"
+        placeholder="合言葉"
+        onkeydown="if(event.key==='Enter') checkPassword()">
+      <button class="btn" style="width:100%;" onclick="checkPassword()">入室する</button>
+      <p id="passwordError" class="overlay-error">合言葉が違います</p>
+      <!-- メールを入力し直したい場合 -->
+      <p style="margin-top:16px;font-size:12px;">
+        <span style="color:var(--blue);cursor:pointer;text-decoration:underline;"
+          onclick="backToEmail()">← メールアドレスを変更する</span>
+      </p>
+    </div>
+  </div>
+
   <script>
     // ============================================================
     // データ定義
@@ -493,50 +556,99 @@
     }
 
     // ============================================================
-    // ① 合言葉ログイン
+    // ① ログイン処理（近大メール → 合言葉の2ステップ）
     // ============================================================
 
-    function checkPassword() {
-      const password = document.getElementById("sitePassword").value;
-      const correctPassword = "takoyaki";
-      if (password === correctPassword) {
-        localStorage.setItem("siteAccess", "ok");
-        document.getElementById("passwordOverlay").style.display = "none";
+    // STEP1：近大メールチェック
+    function checkEmail() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const err   = document.getElementById("emailError");
+      err.style.display = "none";
 
-        // ヘッダーに「ログイン中」と表示し、ログアウトボタンを出す
-        const emailDisplay = document.getElementById("userEmailDisplay");
-        if (emailDisplay) emailDisplay.textContent = "ログイン中";
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) logoutBtn.style.display = "inline-flex";
-
-        // firebase.js 側のFirestore監視を開始する
-        if (typeof window.startFirestoreListeners === "function") {
-          window.startFirestoreListeners();
-        }
-      } else {
-        document.getElementById("passwordError").style.display = "block";
-      }
-    }
-
-    // ② ログアウト処理
-    function localSignOut() {
-      localStorage.removeItem("siteAccess");
-      location.reload();
-    }
-
-    // ページ読み込み時の処理
-    window.addEventListener("load", () => {
-      if (localStorage.getItem("siteAccess") !== "ok") {
-        // 合言葉がまだ入力されていないので合言葉画面を表示
-        document.getElementById("passwordOverlay").style.display = "flex";
+      if (!email.endsWith("@kindai.ac.jp")) {
+        err.style.display = "block";
         return;
       }
-      // すでに合言葉済み → ヘッダー表示を復元
+
+      // メールをいったん一時保存（合言葉OKになったら正式保存）
+      sessionStorage.setItem("pendingEmail", email);
+
+      // STEP1を隠してSTEP2を表示
+      document.getElementById("emailOverlay").style.display = "none";
+      document.getElementById("passwordOverlay").style.display = "flex";
+    }
+
+    // STEP2：合言葉チェック
+    function checkPassword() {
+      const password        = document.getElementById("sitePassword").value;
+      const correctPassword = "takoyaki"; // ← 合言葉はここを変える
+      const err             = document.getElementById("passwordError");
+      err.style.display = "none";
+
+      if (password !== correctPassword) {
+        err.style.display = "block";
+        return;
+      }
+
+      // 合言葉OK → メールを正式保存してログイン完了
+      const email = sessionStorage.getItem("pendingEmail") || "";
+      sessionStorage.removeItem("pendingEmail");
+      localStorage.setItem("kindaiEmail", email);
+      localStorage.setItem("siteAccess", "ok");
+
+      // オーバーレイを閉じる
+      document.getElementById("passwordOverlay").style.display = "none";
+
+      // ② ヘッダーにメール表示＋ログアウトボタン
+      showLoginHeader(email);
+
+      // Firestoreリスナー開始
+      if (typeof window.startFirestoreListeners === "function") {
+        window.startFirestoreListeners();
+      }
+    }
+
+    // STEP2からSTEP1に戻る
+    function backToEmail() {
+      document.getElementById("sitePassword").value = "";
+      document.getElementById("passwordError").style.display = "none";
+      document.getElementById("passwordOverlay").style.display = "none";
+      document.getElementById("emailOverlay").style.display = "flex";
+    }
+
+    // ② ヘッダー表示をログイン状態にする
+    function showLoginHeader(email) {
       const emailDisplay = document.getElementById("userEmailDisplay");
-      if (emailDisplay) emailDisplay.textContent = "ログイン中";
+      if (emailDisplay) emailDisplay.textContent = email;
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.style.display = "inline-flex";
-    });
+    }
+
+    // ログアウト
+function localSignOut() {
+  localStorage.removeItem("kindaiEmail");
+  localStorage.removeItem("siteAccess");
+  sessionStorage.removeItem("pendingEmail");
+  sessionStorage.clear();
+  location.reload();
+}
+
+    // ページ読み込み時の処理
+window.addEventListener("load", () => {
+  const access = localStorage.getItem("siteAccess");
+  const email  = localStorage.getItem("kindaiEmail");
+
+  // 両方そろっていて初めてログイン済みとみなす
+  if (access === "ok" && email && email.endsWith("@kindai.ac.jp")) {
+    showLoginHeader(email);
+    return; // オーバーレイは出さない
+  }
+
+  // どちらか欠けていたら必ずSTEP1（メール入力）から
+  localStorage.removeItem("siteAccess");
+  localStorage.removeItem("kindaiEmail");
+  document.getElementById("emailOverlay").style.display = "flex";
+});
 
     // ============================================================
     // タブ切り替え
@@ -587,9 +699,9 @@
     function addBoardPost() {
       const category = document.getElementById("boardCategory").value;
       const title = document.getElementById("boardTitle").value.trim();
-      const body = document.getElementById("boardBody").value.trim();
-      const anon = document.getElementById("boardAnon").checked;
-      const name = document.getElementById("boardName").value.trim();
+      const body  = document.getElementById("boardBody").value.trim();
+      const anon  = document.getElementById("boardAnon").checked;
+      const name  = document.getElementById("boardName").value.trim();
       if (!title || !body) return alert("タイトルと内容を入力してください");
       const post = {
         category, title, body,
@@ -601,7 +713,7 @@
       data.boardPosts.unshift(post);
       if (typeof window.firebaseSaveBoardPost === "function") window.firebaseSaveBoardPost(post);
       document.getElementById("boardTitle").value = "";
-      document.getElementById("boardBody").value = "";
+      document.getElementById("boardBody").value  = "";
       saveData();
     }
 
@@ -717,9 +829,14 @@
     function renderSchedules() {
       document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
         const d = new Date(s.date + "T00:00:00");
-        const month = d.getMonth() + 1;
-        const day = d.getDate();
-        return `<div class="schedule-card"><div class="datebox"><div class="day">${day}</div><div class="month">${month}月</div></div><div><span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span><div class="title">${escapeHTML(s.title)}</div><div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div></div><button class="btn ${s.joined ? 'btn-ghost' : ''}" onclick="joinSchedule(${i})" ${s.joined ? 'disabled' : ''}>${s.joined ? '参加済み ✓' : '参加する'}</button></div>`;
+        return `<div class="schedule-card">
+          <div class="datebox"><div class="day">${d.getDate()}</div><div class="month">${d.getMonth()+1}月</div></div>
+          <div><span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
+            <div class="title">${escapeHTML(s.title)}</div>
+            <div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
+          </div>
+          <button class="btn ${s.joined ? 'btn-ghost' : ''}" onclick="joinSchedule(${i})" ${s.joined ? 'disabled' : ''}>${s.joined ? '参加済み ✓' : '参加する'}</button>
+        </div>`;
       }).join("");
     }
 
@@ -730,17 +847,19 @@
       document.getElementById("driveLink").href = data.settings.driveUrl;
       document.getElementById("driveDescription").textContent = data.settings.driveDesc;
       const links = [
-        { name: "KULeD", url: "https://kuled.kindai.ac.jp/" },
-        { name: "梅信", url: "https://www.kindai.ac.jp/tsushin/for-students/baishin/" },
+        { name: "KULeD",           url: "https://kuled.kindai.ac.jp/" },
+        { name: "梅信",             url: "https://www.kindai.ac.jp/tsushin/for-students/baishin/" },
         { name: "丸善booklibrary", url: "https://elib.maruzen.co.jp/elib/html/GuestLogin?1/" },
-        { name: "大学公式サイト", url: "https://www.kindai.ac.jp/tsushin/" }
+        { name: "大学公式サイト",   url: "https://www.kindai.ac.jp/tsushin/" }
       ];
       document.getElementById("universityLinks").innerHTML = links.map(x => `
         <a class="link-card side-link" href="${x.url}" target="_blank">
           <strong>🎓 ${x.name}</strong><div class="muted">👆</div>
         </a>
       `).join("");
-      document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x => `<a class="sidebar-item side-link" href="${x.url}" target="_blank">${x.name}</a>`).join("");
+      document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x =>
+        `<a class="sidebar-item side-link" href="${x.url}" target="_blank">${x.name}</a>`
+      ).join("");
     }
 
     // ============================================================
@@ -751,7 +870,10 @@
     function renderFaq() {
       document.getElementById("faqList").innerHTML = data.faqs.map(f => `
         <div class="faq-card" onclick="toggleFaq(this)">
-          <div class="faq-question"><span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span><span>＋</span></div>
+          <div class="faq-question">
+            <span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span>
+            <span>＋</span>
+          </div>
           <div class="faq-answer">${escapeHTML(f.a)}</div>
         </div>`).join("");
     }
@@ -778,11 +900,11 @@
 
     function editMember(index) {
       const m = data.members[index];
-      const newGrade = prompt("学年を入力してください", m.grade || "");
+      const newGrade   = prompt("学年を入力してください", m.grade || "");
       if (newGrade === null) return;
       const newComment = prompt("コメントを編集してください", m.comment || "");
       if (newComment === null) return;
-      m.grade = newGrade;
+      m.grade   = newGrade;
       m.comment = newComment;
       if (typeof window.firebaseUpdateMember === "function") window.firebaseUpdateMember(index, { grade: newGrade, comment: newComment });
       saveData();
@@ -879,10 +1001,10 @@
       const n = data.notices[i];
       const newTitle = prompt("タイトルを編集", n.title);
       if (newTitle === null) return;
-      const newBody = prompt("本文を編集", n.body);
+      const newBody  = prompt("本文を編集", n.body);
       if (newBody === null) return;
       n.title = newTitle;
-      n.body = newBody;
+      n.body  = newBody;
       saveData();
       if (typeof window.firebaseUpdateNotice === "function") {
         window.firebaseUpdateNotice(i, { title: newTitle, body: newBody });
@@ -892,45 +1014,38 @@
 
     function renderAdminLists() {
       document.getElementById("adminNoticeList").innerHTML = data.notices.map((n, i) => `
-        <div class="sidebar-item">
-          ${escapeHTML(n.title)}
+        <div class="sidebar-item">${escapeHTML(n.title)}
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-light btn-small" onclick="editNotice(${i})">編集</button>
             <button class="btn btn-danger btn-small" onclick="deleteNotice(${i})">削除</button>
           </div>
-        </div>
-      `).join("");
+        </div>`).join("");
 
       document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s, i) => `
-        <div class="sidebar-item">
-          <strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}
+        <div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-light btn-small" onclick="editSchedule(${i})">編集</button>
             <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button>
           </div>
-        </div>
-      `).join("");
+        </div>`).join("");
 
       document.getElementById("adminFaqList").innerHTML = data.faqs.map((f, i) => `
-        <div class="sidebar-item">
-          <strong>${escapeHTML(f.category)}</strong><br>${escapeHTML(f.q)}
+        <div class="sidebar-item"><strong>${escapeHTML(f.category)}</strong><br>${escapeHTML(f.q)}
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-light btn-small" onclick="editFaq(${i})">編集</button>
             <button class="btn btn-danger btn-small" onclick="deleteFaq(${i})">削除</button>
           </div>
-        </div>
-      `).join("");
+        </div>`).join("");
     }
 
     // ③ 設定保存（Firebase同期つき）
     function saveSettings() {
-      data.settings.driveUrl      = document.getElementById("adminDriveUrl").value.trim() || "#";
-      data.settings.driveDesc     = document.getElementById("adminDriveDesc").value.trim();
-      data.settings.contactEmail  = document.getElementById("adminContactEmail").value.trim();
-      data.settings.contactTel    = document.getElementById("adminContactTel").value.trim();
-      data.settings.contactHours  = document.getElementById("adminContactHours").value.trim();
+      data.settings.driveUrl     = document.getElementById("adminDriveUrl").value.trim() || "#";
+      data.settings.driveDesc    = document.getElementById("adminDriveDesc").value.trim();
+      data.settings.contactEmail = document.getElementById("adminContactEmail").value.trim();
+      data.settings.contactTel   = document.getElementById("adminContactTel").value.trim();
+      data.settings.contactHours = document.getElementById("adminContactHours").value.trim();
       saveData();
-      // Firebaseにも保存
       if (typeof window.firebaseSaveSettings === "function") {
         window.firebaseSaveSettings(data.settings);
       }
@@ -979,16 +1094,16 @@
       data.faqs.push(faq);
       if (typeof window.firebaseSaveFaq === "function") window.firebaseSaveFaq(faq);
       document.getElementById("adminFaqQuestion").value = "";
-      document.getElementById("adminFaqAnswer").value = "";
+      document.getElementById("adminFaqAnswer").value   = "";
       saveData();
       renderAdminLists();
     }
 
     function fillAdminSettings() {
-      document.getElementById("adminDriveUrl").value    = data.settings.driveUrl;
-      document.getElementById("adminDriveDesc").value   = data.settings.driveDesc;
+      document.getElementById("adminDriveUrl").value     = data.settings.driveUrl;
+      document.getElementById("adminDriveDesc").value    = data.settings.driveDesc;
       document.getElementById("adminContactEmail").value = data.settings.contactEmail;
-      document.getElementById("adminContactTel").value  = data.settings.contactTel;
+      document.getElementById("adminContactTel").value   = data.settings.contactTel;
       document.getElementById("adminContactHours").value = data.settings.contactHours;
     }
 
@@ -996,45 +1111,24 @@
     // 全体レンダリング
     // ============================================================
     function renderAll() {
-      renderNotices();
-      renderBoard();
-      renderSchedules();
-      renderMaterials();
-      renderFaq();
-      renderMembers();
-      renderContact();
-      renderSideEvents();
+      renderNotices(); renderBoard(); renderSchedules(); renderMaterials();
+      renderFaq(); renderMembers(); renderContact(); renderSideEvents();
     }
 
-    // グローバル公開（firebase.js から呼び出せるように）
-    window.data           = data;
-    window.renderBoard    = renderBoard;
-    window.renderNotices  = renderNotices;
-    window.renderMembers  = renderMembers;
-    window.renderSchedules = renderSchedules;
+    // グローバル公開（firebase.js から呼べるように）
+    window.data             = data;
+    window.renderBoard      = renderBoard;
+    window.renderNotices    = renderNotices;
+    window.renderMembers    = renderMembers;
+    window.renderSchedules  = renderSchedules;
     window.renderSideEvents = renderSideEvents;
-    window.renderFaq      = renderFaq;
-    window.renderMaterials = renderMaterials;
-    window.renderContact  = renderContact;
+    window.renderFaq        = renderFaq;
+    window.renderMaterials  = renderMaterials;
+    window.renderContact    = renderContact;
 
     renderAll();
     if (location.hash === "#admin") showTab("admin");
   </script>
-
-  <!-- ▼ 合言葉オーバーレイ -->
-  <div id="passwordOverlay"
-    style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);
-           display:none;justify-content:center;align-items:center;z-index:9999;">
-    <div class="card" style="max-width:400px;width:90%;text-align:center;">
-      <h2 style="margin-bottom:10px;">📘 学習会ポータル</h2>
-      <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
-      <input type="password" id="sitePassword" placeholder="合言葉"
-        style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;"
-        onkeydown="if(event.key==='Enter') checkPassword()">
-      <button class="btn" onclick="checkPassword()">入室する</button>
-      <p id="passwordError" style="color:red;margin-top:10px;display:none;">合言葉が違います</p>
-    </div>
-  </div>
 
   <!-- firebase.js を最後に読み込む -->
   <script type="module" src="./firebase.js"></script>
