@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -231,6 +230,11 @@
       <button onclick="showTab('contact', this)">お問い合わせ</button>
       <button onclick="showTab('admin', this)">管理</button>
     </nav>
+    <div id="loginBadge" style="display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.12);padding:6px 14px;border-radius:999px;white-space:nowrap;">
+      <span style="font-size:12px;color:#b8c7d6;">🎓</span>
+      <span id="userEmailDisplay" style="font-size:12px;color:white;font-weight:700;"></span>
+      <button onclick="doSignOut()" style="border:none;background:rgba(255,255,255,0.2);color:white;padding:3px 10px;border-radius:999px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:700;">ログアウト</button>
+    </div>
   </div>
 </header>
 
@@ -343,6 +347,10 @@
     <section id="adminTab" class="tab-content">
       <div class="card">
         <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">試作用パスワード：admin1234</span></div>
+        <div id="adminLoggedIn" style="display:none;align-items:center;gap:10px;background:#e9f5ef;border:1px solid #a7d9b8;border-radius:10px;padding:10px 16px;margin-bottom:16px;">
+          <span style="font-size:18px;">✅</span>
+          <span style="font-weight:700;color:var(--green);">管理者としてログイン中</span>
+        </div>
         <div id="adminLogin">
           <div class="admin-note">この管理機能は試作用です。本番運用では固定パスワードではなく、正式な認証方式が必要です。</div>
           <div class="form-group"><label>管理者パスワード</label><input id="adminPass" type="password" placeholder="admin1234" /></div>
@@ -416,20 +424,28 @@
   <div style="margin-top:8px;"><span class="admin-secret" onclick="showTab('admin')">管理ページ</span></div>
 </footer>
 
-<!-- パスワード画面 -->
-<div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;justify-content:center;align-items:center;z-index:9999;">
-  <div class="card" style="max-width:400px;width:90%;text-align:center;">
-    <h2 style="margin-bottom:10px;">📘 学習会ポータル</h2>
-    <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
-    <input type="password" id="sitePassword" placeholder="合言葉" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
-    <button class="btn" onclick="checkPassword()">入室する</button>
-    <p id="passwordError" style="color:red;margin-top:10px;display:none;">合言葉が違います</p>
+<!-- Firebase メールログイン画面 -->
+<div id="authOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;justify-content:center;align-items:center;z-index:9999;">
+  <div class="card" style="max-width:420px;width:90%;text-align:center;">
+    <h2 style="margin-bottom:6px;">📘 学習会ポータル</h2>
+    <p class="muted" style="margin-bottom:20px;">近畿大学のメールアドレスでログインしてください</p>
+
+    <!-- メール送信フォーム -->
+    <div id="emailForm">
+      <div class="form-group">
+        <input type="email" id="loginEmail" placeholder="xxxx@kindai.ac.jp" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:12px;">
+      </div>
+      <button class="btn" style="width:100%;" onclick="sendLoginEmail()">ログインリンクを送信</button>
+      <p id="emailError" style="color:var(--red);margin-top:10px;display:none;font-size:13px;">近畿大学のメールアドレスを入力してください</p>
+      <p id="emailSent" style="color:var(--green);margin-top:10px;display:none;font-size:13px;">✅ メールを送信しました！メール内のリンクをクリックしてログインしてください。</p>
+    </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   // ===== Firebase設定 =====
   const firebaseConfig = {
@@ -440,8 +456,68 @@
     messagingSenderId: "222261320673",
     appId: "1:222261320673:web:896e9b0eea9d074d7990a0"
   };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // ===== メール認証設定 =====
+  const ACTION_CODE_SETTINGS = {
+    url: "https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/",
+    handleCodeInApp: true
+  };
+  const ALLOWED_DOMAIN = "kindai.ac.jp";
+
+  // メール送信
+  window.sendLoginEmail = async () => {
+    const email = document.getElementById("loginEmail").value.trim();
+    document.getElementById("emailError").style.display = "none";
+    document.getElementById("emailSent").style.display = "none";
+    if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
+      document.getElementById("emailError").style.display = "block";
+      return;
+    }
+    try {
+      await sendSignInLinkToEmail(auth, email, ACTION_CODE_SETTINGS);
+      localStorage.setItem("emailForSignIn", email);
+      document.getElementById("emailSent").style.display = "block";
+    } catch (e) {
+      alert("メールの送信に失敗しました。もう一度お試しください。");
+    }
+  };
+
+  // ログアウト
+  window.doSignOut = async () => {
+    await signOut(auth);
+    localStorage.removeItem("emailForSignIn");
+    location.reload();
+  };
+
+  // メールリンクからのログイン処理
+  if (isSignInWithEmailLink(auth, window.location.href)) {
+    let email = localStorage.getItem("emailForSignIn");
+    if (!email) email = prompt("確認のためメールアドレスを入力してください");
+    signInWithEmailLink(auth, email, window.location.href)
+      .then(() => {
+        localStorage.removeItem("emailForSignIn");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      })
+      .catch(() => alert("認証に失敗しました。もう一度お試しください。"));
+  }
+
+  // 認証状態の監視 → ログイン済みならオーバーレイ非表示・バッジ表示
+  onAuthStateChanged(auth, (user) => {
+    const overlay = document.getElementById("authOverlay");
+    const badge   = document.getElementById("loginBadge");
+    const emailEl = document.getElementById("userEmailDisplay");
+    if (user) {
+      if (overlay) overlay.style.display = "none";
+      if (badge)   badge.style.display = "flex";
+      if (emailEl) emailEl.textContent = user.email;
+    } else {
+      if (overlay) overlay.style.display = "flex";
+      if (badge)   badge.style.display = "none";
+    }
+  });
 
   const STORAGE_KEY = "studyCirclePortalV1";
   let currentBoardFilter = "すべて";
@@ -776,6 +852,7 @@
     if (document.getElementById("adminPass").value !== "admin1234") return alert("パスワードが違います");
     document.getElementById("adminLogin").style.display = "none";
     document.getElementById("adminPanel").style.display = "grid";
+    document.getElementById("adminLoggedIn").style.display = "flex";
     renderMembers();
     fillAdminSettings();
     renderAdminLists();
@@ -928,22 +1005,7 @@
     renderContact(); renderSideEvents();
   }
 
-  // ===== 合言葉 =====
-  function checkPassword() {
-    if (document.getElementById("sitePassword").value === "study2026") {
-      document.getElementById("passwordOverlay").style.display = "none";
-      localStorage.setItem("siteAccess", "ok");
-    } else {
-      document.getElementById("passwordError").style.display = "block";
-    }
-  }
-
-  window.addEventListener("load", () => {
-    if (localStorage.getItem("siteAccess") === "ok") {
-      const ov = document.getElementById("passwordOverlay");
-      if (ov) ov.style.display = "none";
-    }
-  });
+  // メールログイン機能はFirebase Auth初期化部分で定義済み
 
   window.showTab = showTab;
   window.toggleFaq = toggleFaq;
@@ -969,5 +1031,7 @@
   if (location.hash === "#admin") showTab("admin");
 
 </script>
+<!-- firebase.js 読み込み -->
+<script type="module" src="firebase.js"></script>
 </body>
 </html>
