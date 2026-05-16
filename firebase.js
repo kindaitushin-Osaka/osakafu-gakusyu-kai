@@ -1,5 +1,5 @@
 // ============================================================
-// firebase.js  ―  最終完全版（投稿日時・返信日時追加）
+// firebase.js  ―  完成版（合言葉ログイン対応・設定Firebase同期追加）
 // ============================================================
 
 import { initializeApp }
@@ -12,6 +12,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
   onSnapshot,
   query,
   orderBy,
@@ -19,15 +20,6 @@ import {
   serverTimestamp,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-import {
-  getAuth,
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 import { getAnalytics }
   from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
@@ -45,11 +37,10 @@ const firebaseConfig = {
 
 const app       = initializeApp(firebaseConfig);
 const db        = getFirestore(app);
-const auth      = getAuth(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
 
-// ── docId マップ ───────────────────────────────────────────
+// ── docId マップ（ローカルインデックス ↔ FirestoreドキュメントID） ──────
 let boardIdMap    = {};
 let noticeIdMap   = {};
 let memberIdMap   = {};
@@ -60,117 +51,36 @@ let faqIdMap      = {};
 function formatDateTime(timestamp) {
   if (!timestamp) return "";
   const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  const y = d.getFullYear();
+  const y  = d.getFullYear();
   const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
+  const dy = String(d.getDate()).padStart(2, '0');
+  const h  = String(d.getHours()).padStart(2, '0');
   const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${y}/${mo}/${day} ${h}:${mi}`;
+  return `${y}/${mo}/${dy} ${h}:${mi}`;
 }
 
 // ============================================================
-// 【メールリンク認証】
+// 【Firestoreリスナー開始】― 合言葉ログイン成功後に呼ばれる
 // ============================================================
 
-const ACTION_CODE_SETTINGS = {
-  url: "https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/",
-  handleCodeInApp: true
+window.startFirestoreListeners = function () {
+  initBoardListener();
+  initNoticeListener();
+  initMemberListener();
+  initScheduleListener();
+  initFaqListener();
+  initSettingsListener();
+  console.log("Firestoreリスナー全開始");
 };
 
-const ALLOWED_DOMAIN = "kindai.ac.jp";
-
-window.firebaseSendEmailLink = async function (email) {
-  if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
-    alert("近畿大学のメールアドレス（@kindai.ac.jp）のみ利用できます。");
-    return false;
-  }
-  try {
-    await sendSignInLinkToEmail(auth, email, ACTION_CODE_SETTINGS);
-    localStorage.setItem("emailForSignIn", email);
-    console.log("メールリンク送信OK");
-    return true;
-  } catch (err) {
-    console.error("メールリンク送信失敗:", err);
-    alert("メールの送信に失敗しました。もう一度お試しください。");
-    return false;
-  }
-};
-
-window.firebaseSignOut = async function () {
-  try {
-    await signOut(auth);
-    localStorage.removeItem("emailForSignIn");
-    location.reload();
-  } catch (err) {
-    console.error("ログアウト失敗:", err);
-  }
-};
-
-async function handleEmailLinkSignIn() {
-  if (isSignInWithEmailLink(auth, window.location.href)) {
-    let email = localStorage.getItem("emailForSignIn");
-    if (!email) {
-      email = prompt("確認のためメールアドレスを入力してください");
-    }
-    try {
-      await signInWithEmailLink(auth, email, window.location.href);
-      localStorage.removeItem("emailForSignIn");
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log("メールリンク認証成功");
-    } catch (err) {
-      console.error("メールリンク認証失敗:", err);
-      alert("認証に失敗しました。もう一度メールアドレスを入力してください。");
-    }
-  }
-}
-
+// ページ読み込み時、すでに合言葉済みなら自動でスタート
 window.addEventListener("load", () => {
-  handleEmailLinkSignIn().catch(e => {
-    console.error("handleEmailLinkSignIn失敗:", e);
-  });
-
-  console.log("onAuthStateChanged開始");
-  onAuthStateChanged(auth, (user) => {
-    console.log("onAuthStateChangedコールバック:", user ? user.email : "未ログイン");
-    if (user) {
-      console.log("ログイン中:", user.email);
-      const emailDisplay = document.getElementById("userEmailDisplay");
-      if (emailDisplay) emailDisplay.textContent = user.email;
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) logoutBtn.style.display = "inline-flex";
-      const overlay = document.getElementById("authOverlay");
-      if (overlay) overlay.style.display = "none";
-      setTimeout(() => {
-        initBoardListener();
-        initNoticeListener();
-        initMemberListener();
-        initScheduleListener();
-        initFaqListener();
-      }, 1000);
-} else {
-      console.log("未ログイン処理開始");
-      // ローカル環境の場合は認証スキップ
-      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        console.log("ローカル環境のため認証スキップ");
-        setTimeout(() => {
-          initBoardListener();
-          initNoticeListener();
-          initMemberListener();
-          initScheduleListener();
-          initFaqListener();
-        }, 1000);
-        return;
-      }
-      // 本番環境は認証画面を表示
-      const overlay = document.getElementById("authOverlay");
-      if (overlay) {
-        overlay.style.display = "flex";
-        console.log("authOverlay表示設定完了");
-      } else {
-        console.log("authOverlayが見つかりません！");
-      }
-    }
-  });
+  if (localStorage.getItem("siteAccess") === "ok") {
+    // 少し待ってから開始（index.htmlのrenderAll()完了後）
+    setTimeout(() => {
+      window.startFirestoreListeners();
+    }, 600);
+  }
 });
 
 // ============================================================
@@ -187,7 +97,7 @@ window.firebaseSaveBoardPost = async function (post) {
       likes    : 0,
       solved   : false,
       stamps   : post.stamps,
-      created  : serverTimestamp()  // 投稿日時
+      created  : serverTimestamp()
     });
     console.log("掲示板投稿保存OK");
   } catch (err) {
@@ -230,7 +140,6 @@ window.firebaseToggleSolved = async function (localIndex, newValue) {
   }
 };
 
-// 返信の追加（返信日時も保存）
 window.firebaseAddReply = async function (localIndex, replyText) {
   const docId = boardIdMap[localIndex];
   if (!docId) return;
@@ -239,7 +148,7 @@ window.firebaseAddReply = async function (localIndex, replyText) {
       collection(db, "boardPosts", docId, "replies"),
       {
         text    : replyText,
-        created : serverTimestamp()  // 返信日時
+        created : serverTimestamp()
       }
     );
     console.log("返信保存OK");
@@ -248,7 +157,6 @@ window.firebaseAddReply = async function (localIndex, replyText) {
   }
 };
 
-// 掲示板リアルタイム監視（投稿日時・返信日時を取得）
 async function initBoardListener() {
   const q = query(collection(db, "boardPosts"), orderBy("created", "desc"));
   onSnapshot(q, async (snapshot) => {
@@ -262,7 +170,6 @@ async function initBoardListener() {
         const rSnap = await getDocs(
           query(collection(db, "boardPosts", d.id, "replies"), orderBy("created", "asc"))
         );
-        // 返信日時も取得
         replies = rSnap.docs.map(r => ({
           text    : r.data().text,
           created : formatDateTime(r.data().created)
@@ -277,7 +184,7 @@ async function initBoardListener() {
         solved   : raw.solved   || false,
         stamps   : raw.stamps   || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
         replies  : replies,
-        created  : formatDateTime(raw.created)  // 投稿日時
+        created  : formatDateTime(raw.created)
       });
       boardIdMap[i] = d.id;
     }
@@ -300,8 +207,8 @@ window.firebaseSaveNotice = async function (notice) {
       body     : notice.body,
       type     : notice.type,
       pinned   : notice.pinned,
-      formUrl  : notice.formUrl || "",
-      created  : notice.created || "",
+      formUrl  : notice.formUrl  || "",
+      created  : notice.created  || "",
       createdAt: serverTimestamp()
     });
     console.log("お知らせ保存OK");
@@ -320,28 +227,18 @@ window.firebaseDeleteNotice = async function (localIndex) {
     console.error("お知らせ削除失敗:", err);
   }
 };
-window.firebaseUpdateNotice = async function(localIndex, updatedData) {
 
+window.firebaseUpdateNotice = async function (localIndex, updatedData) {
   const docId = noticeIdMap[localIndex];
-
   if (!docId) return;
-
   try {
-
-    await updateDoc(
-      doc(db, "notices", docId),
-      updatedData
-    );
-
+    await updateDoc(doc(db, "notices", docId), updatedData);
     console.log("お知らせ更新OK");
-
-  } catch(err) {
-
+  } catch (err) {
     console.error("お知らせ更新失敗:", err);
-
   }
-
 };
+
 function initNoticeListener() {
   const q = query(collection(db, "notices"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -374,13 +271,13 @@ function initNoticeListener() {
 window.firebaseSaveMember = async function (member) {
   try {
     await addDoc(collection(db, "members"), {
-      name     : member.name,
-      icon     : member.icon    || "👤",
-      comment  : member.comment || "",
-      subject  : member.subject || "",
-      style    : member.style   || "",
-      grade    : member.grade   || "",
-      createdAt: serverTimestamp()
+      name      : member.name,
+      icon      : member.icon    || "👤",
+      comment   : member.comment || "",
+      subject   : member.subject || "",
+      style     : member.style   || "",
+      grade     : member.grade   || "",
+      createdAt : serverTimestamp()
     });
     console.log("メンバー保存OK");
   } catch (err) {
@@ -465,28 +362,18 @@ window.firebaseDeleteSchedule = async function (localIndex) {
     console.error("スケジュール削除失敗:", err);
   }
 };
-window.firebaseUpdateSchedule = async function(localIndex, updatedData) {
 
+window.firebaseUpdateSchedule = async function (localIndex, updatedData) {
   const docId = scheduleIdMap[localIndex];
-
   if (!docId) return;
-
   try {
-
-    await updateDoc(
-      doc(db, "schedules", docId),
-      updatedData
-    );
-
+    await updateDoc(doc(db, "schedules", docId), updatedData);
     console.log("スケジュール更新OK");
-
-  } catch(err) {
-
+  } catch (err) {
     console.error("スケジュール更新失敗:", err);
-
   }
-
 };
+
 window.firebaseJoinSchedule = async function (localIndex) {
   const docId = scheduleIdMap[localIndex];
   if (!docId) return;
@@ -512,7 +399,7 @@ function initScheduleListener() {
         title       : raw.title        || "",
         place       : raw.place        || "",
         type        : raw.type         || "勉強会",
-        participants: raw.participants || 0,
+        participants: raw.participants  || 0,
         joined      : false
       });
       scheduleIdMap[i] = d.id;
@@ -545,28 +432,18 @@ window.firebaseSaveFaq = async function (faq) {
     console.error("FAQ保存失敗:", err);
   }
 };
-window.firebaseUpdateFaq = async function(localIndex, updatedData) {
 
+window.firebaseUpdateFaq = async function (localIndex, updatedData) {
   const docId = faqIdMap[localIndex];
-
   if (!docId) return;
-
   try {
-
-    await updateDoc(
-      doc(db, "faqs", docId),
-      updatedData
-    );
-
+    await updateDoc(doc(db, "faqs", docId), updatedData);
     console.log("FAQ更新OK");
-
-  } catch(err) {
-
+  } catch (err) {
     console.error("FAQ更新失敗:", err);
-
   }
-
 };
+
 window.firebaseDeleteFaq = async function (localIndex) {
   const docId = faqIdMap[localIndex];
   if (!docId) { console.warn("FAQdocId不明:", localIndex); return; }
@@ -598,6 +475,57 @@ function initFaqListener() {
       console.log(`FAQを同期: ${faqs.length}件`);
     }
   }, (err) => console.error("FAQonSnapshotエラー:", err));
+}
+
+// ============================================================
+// 【設定】Firestore同期 ― ③ 設定のリアルタイム同期
+// ============================================================
+
+/**
+ * 管理ページの「設定を保存」ボタンを押したときに呼ばれる。
+ * Firestoreの settings/main ドキュメントに上書き保存する。
+ */
+window.firebaseSaveSettings = async function (settings) {
+  try {
+    // setDoc で上書き保存（ドキュメントがなければ自動作成）
+    await setDoc(doc(db, "settings", "main"), {
+      driveUrl     : settings.driveUrl     || "#",
+      driveDesc    : settings.driveDesc    || "",
+      contactEmail : settings.contactEmail || "",
+      contactTel   : settings.contactTel   || "",
+      contactHours : settings.contactHours || ""
+    });
+    console.log("設定保存OK（Firestore）");
+  } catch (err) {
+    console.error("設定保存失敗:", err);
+  }
+};
+
+/**
+ * Firestoreの settings/main をリアルタイム更新する。
+ * 変更があったら画面（資料・連絡先）に即反映する。
+ */
+function initSettingsListener() {
+  onSnapshot(doc(db, "settings", "main"), (snap) => {
+    if (!snap.exists()) {
+      console.log("settings/main がまだありません（管理ページから保存してください）");
+      return;
+    }
+    const raw = snap.data();
+    if (window.data) {
+      window.data.settings = {
+        driveUrl     : raw.driveUrl     || "#",
+        driveDesc    : raw.driveDesc    || "",
+        contactEmail : raw.contactEmail || "",
+        contactTel   : raw.contactTel   || "",
+        contactHours : raw.contactHours || ""
+      };
+      // 画面に反映
+      if (window.renderMaterials) window.renderMaterials();
+      if (window.renderContact)   window.renderContact();
+      console.log("設定を同期しました");
+    }
+  }, (err) => console.error("設定onSnapshotエラー:", err));
 }
 
 console.log("firebase.js 読込OK");
