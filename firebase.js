@@ -1,5 +1,5 @@
 // ============================================================
-// firebase.js  ―  最終完全版（投稿日時・返信日時追加） 
+// firebase.js  ―  最終完全版（投稿日時・返信日時追加）
 // ============================================================
 
 import { initializeApp }
@@ -139,6 +139,8 @@ window.addEventListener("load", () => {
       if (emailDisplay) emailDisplay.textContent = user.email;
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.style.display = "inline-flex";
+      const loginBadge = document.getElementById("loginBadge");
+      if (loginBadge) loginBadge.style.display = "flex";
       const overlay = document.getElementById("authOverlay");
       if (overlay) overlay.style.display = "none";
       setTimeout(() => {
