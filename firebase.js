@@ -321,7 +321,28 @@ window.firebaseDeleteNotice = async function (localIndex) {
     console.error("お知らせ削除失敗:", err);
   }
 };
+window.firebaseUpdateNotice = async function(localIndex, updatedData) {
 
+  const docId = noticeIdMap[localIndex];
+
+  if (!docId) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "notices", docId),
+      updatedData
+    );
+
+    console.log("お知らせ更新OK");
+
+  } catch(err) {
+
+    console.error("お知らせ更新失敗:", err);
+
+  }
+
+};
 function initNoticeListener() {
   const q = query(collection(db, "notices"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -445,7 +466,28 @@ window.firebaseDeleteSchedule = async function (localIndex) {
     console.error("スケジュール削除失敗:", err);
   }
 };
+window.firebaseUpdateSchedule = async function(localIndex, updatedData) {
 
+  const docId = scheduleIdMap[localIndex];
+
+  if (!docId) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "schedules", docId),
+      updatedData
+    );
+
+    console.log("スケジュール更新OK");
+
+  } catch(err) {
+
+    console.error("スケジュール更新失敗:", err);
+
+  }
+
+};
 window.firebaseJoinSchedule = async function (localIndex) {
   const docId = scheduleIdMap[localIndex];
   if (!docId) return;
@@ -504,7 +546,28 @@ window.firebaseSaveFaq = async function (faq) {
     console.error("FAQ保存失敗:", err);
   }
 };
+window.firebaseUpdateFaq = async function(localIndex, updatedData) {
 
+  const docId = faqIdMap[localIndex];
+
+  if (!docId) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "faqs", docId),
+      updatedData
+    );
+
+    console.log("FAQ更新OK");
+
+  } catch(err) {
+
+    console.error("FAQ更新失敗:", err);
+
+  }
+
+};
 window.firebaseDeleteFaq = async function (localIndex) {
   const docId = faqIdMap[localIndex];
   if (!docId) { console.warn("FAQdocId不明:", localIndex); return; }
