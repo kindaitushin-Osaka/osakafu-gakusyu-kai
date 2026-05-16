@@ -1,5 +1,5 @@
 // ============================================================
-// firebase.js  ―  完成版（合言葉ログイン対応・設定Firebase同期追加）
+// firebase.js  ―  完成版（近大メール＋合言葉ログイン対応・設定Firebase同期）
 // ============================================================
 
 import { initializeApp }
@@ -50,7 +50,7 @@ let faqIdMap      = {};
 // ── 日時フォーマット ───────────────────────────────────────
 function formatDateTime(timestamp) {
   if (!timestamp) return "";
-  const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const d  = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   const y  = d.getFullYear();
   const mo = String(d.getMonth() + 1).padStart(2, '0');
   const dy = String(d.getDate()).padStart(2, '0');
@@ -60,7 +60,8 @@ function formatDateTime(timestamp) {
 }
 
 // ============================================================
-// 【Firestoreリスナー開始】― 合言葉ログイン成功後に呼ばれる
+// 【Firestoreリスナー開始】
+// index.html の checkPassword() 成功後 または ページ再読み込み時に呼ばれる
 // ============================================================
 
 window.startFirestoreListeners = function () {
@@ -73,10 +74,11 @@ window.startFirestoreListeners = function () {
   console.log("Firestoreリスナー全開始");
 };
 
-// ページ読み込み時、すでに合言葉済みなら自動でスタート
+// ページ読み込み時、すでにログイン済みなら自動でFirestoreリスナー開始
 window.addEventListener("load", () => {
-  if (localStorage.getItem("siteAccess") === "ok") {
-    // 少し待ってから開始（index.htmlのrenderAll()完了後）
+  const access = localStorage.getItem("siteAccess");
+  const email  = localStorage.getItem("kindaiEmail");
+  if (access === "ok" && email && email.endsWith("@kindai.ac.jp")) {
     setTimeout(() => {
       window.startFirestoreListeners();
     }, 600);
@@ -146,10 +148,7 @@ window.firebaseAddReply = async function (localIndex, replyText) {
   try {
     await addDoc(
       collection(db, "boardPosts", docId, "replies"),
-      {
-        text    : replyText,
-        created : serverTimestamp()
-      }
+      { text: replyText, created: serverTimestamp() }
     );
     console.log("返信保存OK");
   } catch (err) {
@@ -378,9 +377,7 @@ window.firebaseJoinSchedule = async function (localIndex) {
   const docId = scheduleIdMap[localIndex];
   if (!docId) return;
   try {
-    await updateDoc(doc(db, "schedules", docId), {
-      participants: increment(1)
-    });
+    await updateDoc(doc(db, "schedules", docId), { participants: increment(1) });
     console.log("参加登録OK");
   } catch (err) {
     console.error("参加登録失敗:", err);
@@ -478,16 +475,11 @@ function initFaqListener() {
 }
 
 // ============================================================
-// 【設定】Firestore同期 ― ③ 設定のリアルタイム同期
+// 【設定】Firestore同期（③ 設定のリアルタイム同期）
 // ============================================================
 
-/**
- * 管理ページの「設定を保存」ボタンを押したときに呼ばれる。
- * Firestoreの settings/main ドキュメントに上書き保存する。
- */
 window.firebaseSaveSettings = async function (settings) {
   try {
-    // setDoc で上書き保存（ドキュメントがなければ自動作成）
     await setDoc(doc(db, "settings", "main"), {
       driveUrl     : settings.driveUrl     || "#",
       driveDesc    : settings.driveDesc    || "",
@@ -501,10 +493,6 @@ window.firebaseSaveSettings = async function (settings) {
   }
 };
 
-/**
- * Firestoreの settings/main をリアルタイム更新する。
- * 変更があったら画面（資料・連絡先）に即反映する。
- */
 function initSettingsListener() {
   onSnapshot(doc(db, "settings", "main"), (snap) => {
     if (!snap.exists()) {
@@ -520,7 +508,6 @@ function initSettingsListener() {
         contactTel   : raw.contactTel   || "",
         contactHours : raw.contactHours || ""
       };
-      // 画面に反映
       if (window.renderMaterials) window.renderMaterials();
       if (window.renderContact)   window.renderContact();
       console.log("設定を同期しました");
