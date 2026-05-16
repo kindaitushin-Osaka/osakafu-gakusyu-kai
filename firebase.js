@@ -271,11 +271,12 @@ window.firebaseSaveMember = async function (member) {
   try {
     await addDoc(collection(db, "members"), {
       name      : member.name,
-      icon      : member.icon    || "👤",
-      comment   : member.comment || "",
-      subject   : member.subject || "",
-      style     : member.style   || "",
-      grade     : member.grade   || "",
+      icon      : member.icon     || "👤",
+      comment   : member.comment  || "",
+      subject   : member.subject  || "",
+      style     : member.style    || "",
+      grade     : member.grade    || "",
+      password  : member.password || "",   // 編集用パスワード
       createdAt : serverTimestamp()
     });
     console.log("メンバー保存OK");
@@ -314,12 +315,13 @@ function initMemberListener() {
     snapshot.docs.forEach((d, i) => {
       const raw = d.data();
       members.push({
-        name    : raw.name    || "",
-        icon    : raw.icon    || "👤",
-        comment : raw.comment || "",
-        subject : raw.subject || "",
-        style   : raw.style   || "",
-        grade   : raw.grade   || ""
+        name     : raw.name     || "",
+        icon     : raw.icon     || "👤",
+        comment  : raw.comment  || "",
+        subject  : raw.subject  || "",
+        style    : raw.style    || "",
+        grade    : raw.grade    || "",
+        password : raw.password || ""   // 編集用パスワード
       });
       memberIdMap[i] = d.id;
     });
