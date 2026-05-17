@@ -1,5 +1,6 @@
 // ============================================================
-// firebase.js  ―  完成版（近大メール＋合言葉ログイン対応・設定Firebase同期）
+// firebase.js  ―  大改造版
+// 表示名管理（usersコレクション）・参加キャンセル・全機能対応
 // ============================================================
 
 import { initializeApp }
@@ -13,6 +14,7 @@ import {
   deleteDoc,
   doc,
   setDoc,
+  getDoc,
   onSnapshot,
   query,
   orderBy,
@@ -40,12 +42,16 @@ const db        = getFirestore(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
 
-// ── docId マップ（ローカルインデックス ↔ FirestoreドキュメントID） ──────
+// ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
 let noticeIdMap   = {};
 let memberIdMap   = {};
 let scheduleIdMap = {};
 let faqIdMap      = {};
+
+// ── 表示名マップ（email → displayName）───────────────────
+// index.html の resolveDisplayName() がこれを参照する
+window.usersMap = {};
 
 // ── 日時フォーマット ───────────────────────────────────────
 function formatDateTime(timestamp) {
@@ -60,27 +66,108 @@ function formatDateTime(timestamp) {
 }
 
 // ============================================================
+// 【表示名管理】usersコレクション
+// ============================================================
+
+/**
+ * ログイン後に呼ばれる。
+ * Firestoreのusers/{email}を確認し、
+ * - 表示名あり → そのままログイン完了
+ * - 表示名なし → STEP3（表示名設定画面）を表示
+ */
+window.checkAndLoadDisplayName = async function (email) {
+  try {
+    // メールアドレスをドキュメントIDに使うためエンコード
+    const safeEmail = email.replace(/\./g, "_dot_");
+    const userDoc = await getDoc(doc(db, "users", safeEmail));
+    if (userDoc.exists() && userDoc.data().displayName) {
+      // 表示名あり → ログイン完了
+      const displayName = userDoc.data().displayName;
+      window.currentDisplayName = displayName;
+      window.usersMap[email] = displayName;
+      if (window.showLoginHeader) window.showLoginHeader(email, displayName);
+      if (window.updateBoardNameField)  window.updateBoardNameField();
+      if (window.updateMemberNameField) window.updateMemberNameField();
+      // Firestoreリスナー開始
+      window.startFirestoreListeners();
+    } else {
+      // 表示名なし → STEP3を表示
+      document.getElementById("displayNameOverlay").style.display = "flex";
+    }
+  } catch (err) {
+    console.error("表示名確認失敗:", err);
+    // エラー時もSTEP3を表示
+    document.getElementById("displayNameOverlay").style.display = "flex";
+  }
+};
+
+/**
+ * 表示名をFirestoreに保存する
+ */
+window.firebaseSaveDisplayName = async function (email, displayName) {
+  try {
+    const safeEmail = email.replace(/\./g, "_dot_");
+    await setDoc(doc(db, "users", safeEmail), {
+      email       : email,
+      displayName : displayName,
+      updatedAt   : serverTimestamp()
+    });
+    // usersMapも更新
+    window.usersMap[email] = displayName;
+    // 掲示板・メンバーを再描画（最新名に更新）
+    if (window.renderBoard)   window.renderBoard();
+    if (window.renderMembers) window.renderMembers();
+    console.log("表示名保存OK:", displayName);
+  } catch (err) {
+    console.error("表示名保存失敗:", err);
+  }
+};
+
+/**
+ * 全ユーザーの表示名をFirestoreから読み込んでusersMapに格納
+ */
+async function loadAllDisplayNames() {
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    snap.forEach(d => {
+      const raw = d.data();
+      if (raw.email && raw.displayName) {
+        window.usersMap[raw.email] = raw.displayName;
+      }
+    });
+    console.log("表示名マップ読込OK:", Object.keys(window.usersMap).length, "件");
+    // 読込後に再描画
+    if (window.renderBoard)   window.renderBoard();
+    if (window.renderMembers) window.renderMembers();
+  } catch (err) {
+    console.error("表示名マップ読込失敗:", err);
+  }
+}
+
+// ============================================================
 // 【Firestoreリスナー開始】
-// index.html の checkPassword() 成功後 または ページ再読み込み時に呼ばれる
 // ============================================================
 
 window.startFirestoreListeners = function () {
+  loadAllDisplayNames();  // 全ユーザーの表示名を先に読み込む
   initBoardListener();
   initNoticeListener();
   initMemberListener();
   initScheduleListener();
   initFaqListener();
   initSettingsListener();
+  initOfficerListener();
+  initRulesListener();
   console.log("Firestoreリスナー全開始");
 };
 
-// ページ読み込み時、すでにログイン済みなら自動でFirestoreリスナー開始
+// ページ読み込み時、すでにログイン済みなら自動でチェック
 window.addEventListener("load", () => {
   const access = localStorage.getItem("siteAccess");
   const email  = localStorage.getItem("kindaiEmail");
   if (access === "ok" && email && email.endsWith("@kindai.ac.jp")) {
     setTimeout(() => {
-      window.startFirestoreListeners();
+      window.checkAndLoadDisplayName(email);
     }, 600);
   }
 });
@@ -92,14 +179,15 @@ window.addEventListener("load", () => {
 window.firebaseSaveBoardPost = async function (post) {
   try {
     await addDoc(collection(db, "boardPosts"), {
-      category : post.category,
-      title    : post.title,
-      body     : post.body,
-      author   : post.author,
-      likes    : 0,
-      solved   : false,
-      stamps   : post.stamps,
-      created  : serverTimestamp()
+      category    : post.category,
+      title       : post.title,
+      body        : post.body,
+      author      : post.author,
+      authorEmail : post.authorEmail || "",
+      likes       : 0,
+      solved      : false,
+      stamps      : post.stamps,
+      created     : serverTimestamp()
     });
     console.log("掲示板投稿保存OK");
   } catch (err) {
@@ -112,7 +200,6 @@ window.firebaseLikePost = async function (localIndex) {
   if (!docId) return;
   try {
     await updateDoc(doc(db, "boardPosts", docId), { likes: increment(1) });
-    console.log("いいね更新OK");
   } catch (err) {
     console.error("いいね更新失敗:", err);
   }
@@ -125,7 +212,6 @@ window.firebaseStampPost = async function (localIndex, stampKey) {
     await updateDoc(doc(db, "boardPosts", docId), {
       [`stamps.${stampKey}`]: increment(1)
     });
-    console.log("スタンプ更新OK:", stampKey);
   } catch (err) {
     console.error("スタンプ更新失敗:", err);
   }
@@ -136,25 +222,30 @@ window.firebaseToggleSolved = async function (localIndex, newValue) {
   if (!docId) return;
   try {
     await updateDoc(doc(db, "boardPosts", docId), { solved: newValue });
-    console.log("解決済み更新OK:", newValue);
   } catch (err) {
     console.error("解決済み更新失敗:", err);
   }
 };
 
-window.firebaseAddReply = async function (localIndex, replyText) {
+window.firebaseAddReply = async function (localIndex, reply) {
   const docId = boardIdMap[localIndex];
   if (!docId) return;
   try {
     await addDoc(
       collection(db, "boardPosts", docId, "replies"),
-      { text: replyText, created: serverTimestamp() }
+      {
+        text        : reply.text,
+        author      : reply.author      || "匿名",
+        authorEmail : reply.authorEmail || "",
+        created     : serverTimestamp()
+      }
     );
     console.log("返信保存OK");
   } catch (err) {
     console.error("返信保存失敗:", err);
   }
 };
+
 window.firebaseDeleteBoardPost = async function (localIndex) {
   const docId = boardIdMap[localIndex];
   if (!docId) { console.warn("掲示板docId不明:", localIndex); return; }
@@ -165,6 +256,7 @@ window.firebaseDeleteBoardPost = async function (localIndex) {
     console.error("掲示板投稿削除失敗:", err);
   }
 };
+
 async function initBoardListener() {
   const q = query(collection(db, "boardPosts"), orderBy("created", "desc"));
   onSnapshot(q, async (snapshot) => {
@@ -179,20 +271,23 @@ async function initBoardListener() {
           query(collection(db, "boardPosts", d.id, "replies"), orderBy("created", "asc"))
         );
         replies = rSnap.docs.map(r => ({
-          text    : r.data().text,
-          created : formatDateTime(r.data().created)
+          text        : r.data().text,
+          author      : r.data().author      || "匿名",
+          authorEmail : r.data().authorEmail || "",
+          created     : formatDateTime(r.data().created)
         }));
       } catch (_) {}
       posts.push({
-        category : raw.category || "質問",
-        title    : raw.title    || "",
-        body     : raw.body     || "",
-        author   : raw.author   || "匿名",
-        likes    : raw.likes    || 0,
-        solved   : raw.solved   || false,
-        stamps   : raw.stamps   || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
-        replies  : replies,
-        created  : formatDateTime(raw.created)
+        category    : raw.category    || "質問",
+        title       : raw.title       || "",
+        body        : raw.body        || "",
+        author      : raw.author      || "匿名",
+        authorEmail : raw.authorEmail || "",
+        likes       : raw.likes       || 0,
+        solved      : raw.solved      || false,
+        stamps      : raw.stamps      || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
+        replies     : replies,
+        created     : formatDateTime(raw.created)
       });
       boardIdMap[i] = d.id;
     }
@@ -280,12 +375,13 @@ window.firebaseSaveMember = async function (member) {
   try {
     await addDoc(collection(db, "members"), {
       name      : member.name,
-      icon      : member.icon     || "👤",
-      comment   : member.comment  || "",
-      subject   : member.subject  || "",
-      style     : member.style    || "",
-      grade     : member.grade    || "",
-      password  : member.password || "",   // 編集用パスワード
+      email     : member.email     || "",
+      icon      : member.icon      || "👤",
+      comment   : member.comment   || "",
+      subject   : member.subject   || "",
+      style     : member.style     || "",
+      grade     : member.grade     || "",
+      password  : member.password  || "",
       createdAt : serverTimestamp()
     });
     console.log("メンバー保存OK");
@@ -325,12 +421,13 @@ function initMemberListener() {
       const raw = d.data();
       members.push({
         name     : raw.name     || "",
+        email    : raw.email    || "",
         icon     : raw.icon     || "👤",
         comment  : raw.comment  || "",
         subject  : raw.subject  || "",
         style    : raw.style    || "",
         grade    : raw.grade    || "",
-        password : raw.password || ""   // 編集用パスワード
+        password : raw.password || ""
       });
       memberIdMap[i] = d.id;
     });
@@ -343,7 +440,7 @@ function initMemberListener() {
 }
 
 // ============================================================
-// 【スケジュール】
+// 【スケジュール】（参加キャンセル対応）
 // ============================================================
 
 window.firebaseSaveSchedule = async function (schedule) {
@@ -392,6 +489,17 @@ window.firebaseJoinSchedule = async function (localIndex) {
     console.log("参加登録OK");
   } catch (err) {
     console.error("参加登録失敗:", err);
+  }
+};
+
+window.firebaseCancelSchedule = async function (localIndex) {
+  const docId = scheduleIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "schedules", docId), { participants: increment(-1) });
+    console.log("参加キャンセルOK");
+  } catch (err) {
+    console.error("参加キャンセル失敗:", err);
   }
 };
 
@@ -486,17 +594,21 @@ function initFaqListener() {
 }
 
 // ============================================================
-// 【設定】Firestore同期（③ 設定のリアルタイム同期）
+// 【設定】Firestore同期
 // ============================================================
 
 window.firebaseSaveSettings = async function (settings) {
   try {
     await setDoc(doc(db, "settings", "main"), {
-      driveUrl     : settings.driveUrl     || "#",
-      driveDesc    : settings.driveDesc    || "",
-      contactEmail : settings.contactEmail || "",
-      contactTel   : settings.contactTel   || "",
-      contactHours : settings.contactHours || ""
+      driveUrl       : settings.driveUrl       || "#",
+      driveDesc      : settings.driveDesc      || "",
+      contactEmail   : settings.contactEmail   || "",
+      contactTel     : settings.contactTel     || "",
+      contactHours   : settings.contactHours   || "",
+      circleDesc     : settings.circleDesc     || "",
+      circleEmail    : settings.circleEmail    || "",
+      circleChat     : settings.circleChat     || "",
+      circleChatLabel: settings.circleChatLabel|| ""
     });
     console.log("設定保存OK（Firestore）");
   } catch (err) {
@@ -507,23 +619,108 @@ window.firebaseSaveSettings = async function (settings) {
 function initSettingsListener() {
   onSnapshot(doc(db, "settings", "main"), (snap) => {
     if (!snap.exists()) {
-      console.log("settings/main がまだありません（管理ページから保存してください）");
+      console.log("settings/main がまだありません");
       return;
     }
     const raw = snap.data();
     if (window.data) {
       window.data.settings = {
-        driveUrl     : raw.driveUrl     || "#",
-        driveDesc    : raw.driveDesc    || "",
-        contactEmail : raw.contactEmail || "",
-        contactTel   : raw.contactTel   || "",
-        contactHours : raw.contactHours || ""
+        driveUrl       : raw.driveUrl       || "#",
+        driveDesc      : raw.driveDesc      || "",
+        contactEmail   : raw.contactEmail   || "",
+        contactTel     : raw.contactTel     || "",
+        contactHours   : raw.contactHours   || "",
+        circleDesc     : raw.circleDesc     || "",
+        circleEmail    : raw.circleEmail    || "",
+        circleChat     : raw.circleChat     || "",
+        circleChatLabel: raw.circleChatLabel|| ""
       };
       if (window.renderMaterials) window.renderMaterials();
       if (window.renderContact)   window.renderContact();
       console.log("設定を同期しました");
     }
   }, (err) => console.error("設定onSnapshotエラー:", err));
+}
+
+// ============================================================
+// 【役員メッセージ】officersコレクション
+// ============================================================
+
+let officerIdMap = {};
+
+window.firebaseSaveOfficer = async function (officer) {
+  try {
+    await addDoc(collection(db, "officers"), {
+      role      : officer.role    || "",
+      name      : officer.name    || "",
+      message   : officer.message || "",
+      createdAt : serverTimestamp()
+    });
+    console.log("役員メッセージ保存OK");
+  } catch (err) {
+    console.error("役員メッセージ保存失敗:", err);
+  }
+};
+
+window.firebaseDeleteOfficer = async function (localIndex) {
+  const docId = officerIdMap[localIndex];
+  if (!docId) { console.warn("役員docId不明:", localIndex); return; }
+  try {
+    await deleteDoc(doc(db, "officers", docId));
+    console.log("役員メッセージ削除OK");
+  } catch (err) {
+    console.error("役員メッセージ削除失敗:", err);
+  }
+};
+
+function initOfficerListener() {
+  const q = query(collection(db, "officers"), orderBy("createdAt", "asc"));
+  onSnapshot(q, (snapshot) => {
+    const officers = [];
+    officerIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      officers.push({
+        role    : raw.role    || "",
+        name    : raw.name    || "",
+        message : raw.message || ""
+      });
+      officerIdMap[i] = d.id;
+    });
+    if (window.data) {
+      window.data.officers = officers;
+      if (window.renderRules) window.renderRules();
+      console.log(`役員メッセージを同期: ${officers.length}件`);
+    }
+  }, (err) => console.error("役員onSnapshotエラー:", err));
+}
+
+// ============================================================
+// 【会則・ルール本文】rulesコレクション
+// ============================================================
+
+window.firebaseSaveRules = async function (text) {
+  try {
+    await setDoc(doc(db, "rules", "main"), {
+      text      : text || "",
+      updatedAt : serverTimestamp()
+    });
+    console.log("会則保存OK");
+  } catch (err) {
+    console.error("会則保存失敗:", err);
+  }
+};
+
+function initRulesListener() {
+  onSnapshot(doc(db, "rules", "main"), (snap) => {
+    if (!snap.exists()) return;
+    const raw = snap.data();
+    if (window.data) {
+      window.data.rulesText = raw.text || "";
+      if (window.renderRules) window.renderRules();
+      console.log("会則を同期しました");
+    }
+  }, (err) => console.error("会則onSnapshotエラー:", err));
 }
 
 console.log("firebase.js 読込OK");
