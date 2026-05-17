@@ -1395,7 +1395,6 @@
       document.getElementById("officerList").innerHTML = officers.length === 0 ? "" :
         officers.map(o => `
           <div class="member-card" style="text-align:center;">
-            <div class="member-icon">🎓</div>
             <div class="name">${escapeHTML(o.name)}</div>
             <div class="muted" style="margin-bottom:8px;">${escapeHTML(o.role)}</div>
             <p style="font-size:14px;text-align:left;">${escapeHTML(o.message)}</p>
