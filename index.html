@@ -390,7 +390,7 @@
           <div class="section-head"><h2 class="section-title">📋 会則・ルール</h2></div>
 
           <!-- 役員メッセージ -->
-          <div id="officerList" class="grid grid-2" style="margin-bottom:24px;"></div>
+          <div id="officerList" class="grid" style="margin-bottom:24px;"></div>
 
           <!-- 会則本文 -->
           <div id="rulesText" style="white-space:pre-wrap;font-size:14px;line-height:1.9;color:#374151;background:#f8fbff;border:1px solid var(--line);border-radius:14px;padding:20px;"></div>
@@ -1391,14 +1391,14 @@
     function renderRules() {
       // 役員メッセージ
       const officers = data.officers || [];
-      document.getElementById("officerList").innerHTML = officers.length === 0 ? "" :
-        officers.map(o => `
-          <div class="member-card" style="text-align:center;">
-            <div class="name">${escapeHTML(o.name)}</div>
-            <div class="muted" style="margin-bottom:8px;">${escapeHTML(o.role)}</div>
-            <p style="font-size:14px;text-align:left;">${escapeHTML(o.message)}</p>
-          </div>`
-        ).join("");
+document.getElementById("officerList").innerHTML = officers.length === 0 ? "" :
+  officers.map(o => `
+    <div class="notice-card normal" style="padding:16px;">
+      <div style="font-weight:900;font-size:16px;color:var(--blue-dark);margin-bottom:4px;">${escapeHTML(o.name)}</div>
+      <div class="muted" style="margin-bottom:10px;">${escapeHTML(o.role)}</div>
+      <p style="font-size:14px;white-space:pre-wrap;">${escapeHTML(o.message)}</p>
+    </div>`
+  ).join("");
 
       // 会則本文
       const rulesEl = document.getElementById("rulesText");
