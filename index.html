@@ -1119,7 +1119,9 @@
       const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
       document.getElementById("memberList").innerHTML = data.members.map((m, index) => {
         // 最新の表示名を使用
-        const displayName = m.email ? resolveDisplayName(m.email, m.name) : m.name;
+      const displayName = m.email && window.usersMap && window.usersMap[m.email]
+       ? window.usersMap[m.email]
+        : m.name;
         return `
         <div class="member-card">
           <div class="member-icon">${escapeHTML(m.icon || "👤")}</div>
