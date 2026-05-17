@@ -936,8 +936,7 @@
             ${(p.replies || []).map(r => {
               const rText    = typeof r === 'string' ? r : (r.text || '');
               const rAuthor  = typeof r === 'object' ? resolveDisplayName(r.authorEmail, r.author) : "メンバー";
-              const rCreated = typeof r === 'object' && r.created ? r.created : '';
-              return `<div class="reply-item">
+              const rCreated = typeof r === 'object' && r.created ? r.created : (typeof r === 'object' && r.createdAt ? r.createdAt : '');              return `<div class="reply-item">
                 <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${escapeHTML(rText)}
                 ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
               </div>`;
