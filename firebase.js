@@ -433,7 +433,12 @@ function initMemberListener() {
     });
     if (window.data && window.renderMembers) {
       window.data.members = members;
-      window.renderMembers();
+      // usersMapが読み込まれていれば即描画、なければ少し待って再描画
+      if (window.usersMap && Object.keys(window.usersMap).length > 0) {
+        window.renderMembers();
+      } else {
+        setTimeout(() => { if (window.renderMembers) window.renderMembers(); }, 1500);
+      }
       console.log(`メンバーを同期: ${members.length}件`);
     }
   }, (err) => console.error("メンバーonSnapshotエラー:", err));
