@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="data:,">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦉</text></svg>">
   <title>近畿大学通信教育部 大阪府学習会ポータル</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -227,6 +227,31 @@
       nav button { white-space: nowrap; }
     }
     @media (max-width: 768px) {
+ .subtitle { display: none; }  /* サブタイトルを非表示 */
+
+  #userInfo {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  #userEmailDisplay {
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+
+  #changeNameBtn, #logoutBtn {
+    flex-shrink: 0;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
+
       .wrap { display: block; padding: 12px; }
       main, aside { width: 100%; }
       aside { margin-top: 16px; }
@@ -258,8 +283,7 @@
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('admin', this)">管理</button>
       </nav>
-      <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <!-- 表示名＋名前変更ボタン -->
+    <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;">        <!-- 表示名＋名前変更ボタン -->
         <span id="userDisplayName" style="color:#b8c7d6;font-size:12px;"></span>
         <button id="changeNameBtn" class="btn btn-small"
           style="display:none;background:rgba(255,255,255,.10);font-size:11px;"
