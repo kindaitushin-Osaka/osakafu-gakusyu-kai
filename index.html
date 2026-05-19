@@ -89,6 +89,7 @@
 
     .grid { display: grid; gap: 14px; }
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
     .badge {
       display: inline-flex; align-items: center; gap: 4px;
@@ -167,13 +168,14 @@
     .faq-card.open .faq-answer { display: block; }
 
     .member-card .name { font-weight: 900; font-size: 17px; color: var(--blue-dark); }
-    .member-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: linear-gradient(135deg, #deebf2, #a0e7e7);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 34px; color: white; margin: 0 auto 14px;
-      box-shadow: 0 4px 12px rgba(59,110,165,.25);
-    }
+.member-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #e7f6ff, #102e6e);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin: 0 auto 8px;
+  box-shadow: 0 4px 12px rgba(255,193,7,.15);
+  flex-shrink: 0;
+}
 
     aside .number { font-size: 38px; font-weight: 900; color: var(--blue); line-height: 1; }
     .side-link { text-decoration: none; color: var(--ink); display: block; }
@@ -227,6 +229,9 @@
       nav button { white-space: nowrap; }
     }
     @media (max-width: 768px) {
+  /* 既存コード */
+  .grid-3 { grid-template-columns: 1fr; }
+}
  .subtitle { display: none; }  /* サブタイトルを非表示 */
 
   #userInfo {
@@ -394,7 +399,7 @@
                 <option value="📝">📝 履修生</option>
               </select>
             </div>
-            <div class="form-group"><label>一言コメント</label><input id="memberComment" placeholder="例：レポート頑張っています" /></div>
+            <div class="form-group"><label>一言コメント</label><input id="memberComment" placeholder="例：レポート頑張っています（50文字以内）" maxlength="50" /></div>
             <div class="form-group">
               <label>編集用パスワード（必須・4文字以上）</label>
               <input id="memberPassword" type="password" placeholder="自分だけが知るパスワードを設定してください" />
@@ -402,7 +407,7 @@
             </div>
             <button class="btn" onclick="addMember()">自己紹介を登録する</button>
           </div>
-          <div id="memberList" class="grid grid-2"></div>
+          <div id="memberList" class="grid grid-3"></div>
         </div>
       </section>
 
@@ -1064,7 +1069,7 @@
       ];
       document.getElementById("universityLinks").innerHTML = links.map(x => `
         <a class="link-card side-link" href="${x.url}" target="_blank">
-          <strong>🎓 ${x.name}</strong><div class="muted">👆</div>
+          <strong>🎓 ${x.name}</strong>
         </a>
       `).join("");
       document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x =>
@@ -1112,7 +1117,7 @@
       saveData();
     }
 
-    function editMember(index) {
+ function editMember(index) {
       const m       = data.members[index];
       const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
       if (!isAdmin) {
@@ -1120,10 +1125,11 @@
         if (inputPass === null) return;
         if (inputPass !== m.password) return alert("パスワードが違います");
       }
-      const newGrade   = prompt("学年を入力してください", m.grade || "");
+      const newGrade = prompt("学年を入力してください", m.grade || "");
       if (newGrade === null) return;
-      const newComment = prompt("コメントを編集してください", m.comment || "");
+      let newComment = prompt("コメントを編集してください（50文字以内）", m.comment || "");
       if (newComment === null) return;
+      newComment = newComment.slice(0, 50);
       m.grade   = newGrade;
       m.comment = newComment;
       if (typeof window.firebaseUpdateMember === "function") window.firebaseUpdateMember(index, { grade: newGrade, comment: newComment });
