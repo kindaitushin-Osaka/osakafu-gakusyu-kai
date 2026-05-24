@@ -287,12 +287,13 @@ async function initBoardListener() {
         const rSnap = await getDocs(
           query(collection(db, "boardPosts", d.id, "replies"), orderBy("created", "asc"))
         );
-        replies = rSnap.docs.map(r => ({
-          text        : r.data().text,
-          author      : r.data().author      || "匿名",
-          authorEmail : r.data().authorEmail || "",
-          created     : formatDateTime(r.data().created)
-        }));
+replies = rSnap.docs.map(r => ({
+  text        : r.data().text,
+  author      : r.data().author      || "匿名",
+  authorEmail : r.data().authorEmail || "",
+  created     : formatDateTime(r.data().created),
+  likes       : r.data().likes       || 0
+}));
       } catch (_) {}
       posts.push({
         category    : raw.category    || "質問",
