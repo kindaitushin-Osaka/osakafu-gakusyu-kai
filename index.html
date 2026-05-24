@@ -858,17 +858,23 @@
       saveData();
     }
  
-    function likePost(i) {
-      data.boardPosts[i].likes++;
-      saveData();
-      if (typeof window.firebaseLikePost === "function") window.firebaseLikePost(i);
-    }
+function likePost(i) {
+  const key = `liked_post_${i}`;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, "1");
+  data.boardPosts[i].likes++;
+  saveData();
+  if (typeof window.firebaseLikePost === "function") window.firebaseLikePost(i);
+}
  
-    function stampPost(i, s) {
-      data.boardPosts[i].stamps[s]++;
-      saveData();
-      if (typeof window.firebaseStampPost === "function") window.firebaseStampPost(i, s);
-    }
+function stampPost(i, s) {
+  const key = `stamped_post_${i}_${s}`;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, "1");
+  data.boardPosts[i].stamps[s]++;
+  saveData();
+  if (typeof window.firebaseStampPost === "function") window.firebaseStampPost(i, s);
+}
  
     function toggleSolved(i) {
       data.boardPosts[i].solved = !data.boardPosts[i].solved;
@@ -945,8 +951,13 @@ function likeReply(postIndex, replyIndex) {
           <div class="title">${escapeHTML(p.title)}</div>
           <div class="body-text">${autoLink(escapeHTML(p.body))}</div>
           <div class="post-actions">
-            <button class="btn btn-light btn-small" onclick="likePost(${p._index})">❤️ ${p.likes}</button>
-            ${["👍","😊","🎉","💪"].map(s => `<button class="btn btn-ghost btn-small" onclick="stampPost(${p._index}, '${s}')">${s} ${p.stamps[s] || 0}</button>`).join("")}
+          ${(() => { const liked = localStorage.getItem(`liked_post_${p._index}`); return `<button class="btn btn-light btn-small" style="${liked ? 'opacity:0.4;' : ''}" onclick="likePost(${p._index})" ${liked ? 'disabled' : ''}>❤️ ${p.likes}</button>`; })()}
+          ${["👍","😂","🎉","🙏"].map(s => {
+  const stamped = localStorage.getItem(`stamped_post_${p._index}_${s}`);
+  return `<button class="btn btn-ghost btn-small" style="${stamped ? 'opacity:0.4;' : ''}" onclick="stampPost(${p._index}, '${s}')" ${stamped ? 'disabled' : ''}>${s} ${p.stamps[s] || 0}</button>`;
+}).join("")}
+
+
             <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
             ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteBoardPost(${p._index})">🗑️ 削除</button>` : ""}
           </div>
