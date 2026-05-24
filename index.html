@@ -895,16 +895,19 @@
       if (typeof window.firebaseAddReply === "function") window.firebaseAddReply(i, reply);
     }
  
-    function likeReply(postIndex, replyIndex) {
-      if (!data.boardPosts[postIndex].replies[replyIndex].likes) {
-        data.boardPosts[postIndex].replies[replyIndex].likes = 0;
-      }
-      data.boardPosts[postIndex].replies[replyIndex].likes++;
-      saveData();
-      if (typeof window.firebaseLikeReply === "function") {
-        window.firebaseLikeReply(postIndex, replyIndex);
-      }
-    }
+function likeReply(postIndex, replyIndex) {
+  const key = `liked_reply_${postIndex}_${replyIndex}`;
+  if (localStorage.getItem(key)) return; // すでに押している
+  localStorage.setItem(key, "1");
+  if (!data.boardPosts[postIndex].replies[replyIndex].likes) {
+    data.boardPosts[postIndex].replies[replyIndex].likes = 0;
+  }
+  data.boardPosts[postIndex].replies[replyIndex].likes++;
+  saveData();
+  if (typeof window.firebaseLikeReply === "function") {
+    window.firebaseLikeReply(postIndex, replyIndex);
+  }
+}
  
     function deleteBoardPost(index) {
       if (!confirm("この投稿を削除しますか？")) return;
@@ -953,10 +956,11 @@
               const rAuthor  = typeof r === 'object' ? resolveDisplayName(r.authorEmail, r.author) : "メンバー";
               const rCreated = typeof r === 'object' && r.created ? r.created : (typeof r === 'object' && r.createdAt ? r.createdAt : '');
               const rLikes   = typeof r === 'object' ? (r.likes || 0) : 0;
+              const alreadyLiked = localStorage.getItem(`liked_reply_${p._index}_${rIdx}`);              
               return `<div class="reply-item">
                 <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${escapeHTML(rText)}
                 ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
-                <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="likeReply(${p._index}, ${rIdx})"><button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="likeReply(${p._index}, ${rIdx})">👍 ${rLikes}</button>
+              <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
               </div>`;
             }).join("")}
             <div class="reply-input-row">
