@@ -245,6 +245,23 @@ window.firebaseAddReply = async function (localIndex, reply) {
     console.error("返信保存失敗:", err);
   }
 };
+window.firebaseLikeReply = async function (postIndex, replyIndex) {
+  const docId = boardIdMap[postIndex];
+  if (!docId) return;
+  try {
+    const rSnap = await getDocs(
+      query(collection(db, "boardPosts", docId, "replies"), orderBy("created", "asc"))
+    );
+    const replyDoc = rSnap.docs[replyIndex];
+    if (!replyDoc) return;
+    await updateDoc(doc(db, "boardPosts", docId, "replies", replyDoc.id), {
+      likes: increment(1)
+    });
+    console.log("返信いいねOK");
+  } catch (err) {
+    console.error("返信いいね失敗:", err);
+  }
+};
 
 window.firebaseDeleteBoardPost = async function (localIndex) {
   const docId = boardIdMap[localIndex];
@@ -729,3 +746,4 @@ function initRulesListener() {
 }
 
 console.log("firebase.js 読込OK");
+
