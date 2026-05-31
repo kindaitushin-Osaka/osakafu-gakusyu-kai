@@ -282,6 +282,7 @@
         <button onclick="showTab('members', this)">メンバー</button>
         <button onclick="showTab('rules', this)">会則・ルール</button>
         <button onclick="showTab('contact', this)">お問い合わせ</button>
+        <button onclick="showTab('about', this)">ロゴマーク</button>
         <button onclick="showTab('admin', this)">管理</button>
       </nav>
       <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;">
@@ -417,7 +418,29 @@
           <div id="rulesText" style="white-space:pre-wrap;font-size:14px;line-height:1.9;color:#374151;background:#f8fbff;border:1px solid var(--line);border-radius:14px;padding:20px;"></div>
         </div>
       </section>
- 
+ <!-- ロゴマーク -->
+<section id="aboutTab" class="tab-content">
+  <div class="card">
+    <div class="section-head"><h2 class="section-title">📌 大阪府学習会シンボルマークについて</h2></div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <img src="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/Osaka-Gakusyukai-LOGO.png"
+        style="max-width:280px;width:100%;" alt="大阪府学習会ロゴ">
+    </div>
+    <div class="notice-card normal" style="padding:20px;">
+      <div style="font-weight:900;font-size:16px;color:var(--blue-dark);margin-bottom:12px;">⭐ シンボル（ロゴ）マークについて</div>
+      <p style="font-size:14px;line-height:2;white-space:pre-wrap;">大阪府学習会のシンボルマークは、近畿大学を象徴する「近大マグロ」に着想を得ています。
+
+広い海を力強く泳ぎ続ける回遊魚の姿は、仕事や家庭と両立しながら学び続ける通信教育生の姿を表しています。
+また、成長と発展の象徴として、学びを通じてそれぞれが目標に向かって前進することへの願いが込められています。
+
+頭上の学帽は学問と卒業への志を、二重の円は「仲間とのつながり」と「個人の成長」を象徴しています。
+
+このマークには、大阪府学習会が互いに支え合いながら学び続ける場であり、すべての会員が目標に向かって力強く前進できるようにという願いが込められています。
+
+2026.6.1　会員投票により決定</p>
+    </div>
+  </div>
+</section>
       <!-- お問い合わせ -->
       <section id="contactTab" class="tab-content">
         <div class="card">
@@ -534,6 +557,8 @@
   <!-- STEP1：近大メール入力 -->
   <div id="emailOverlay" class="overlay">
     <div class="overlay-card">
+      <img src="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/Osaka-Gakusyukai-LOGO.png" 
+  style="width:140px;margin-bottom:12px;" alt="大阪府学習会ロゴ">
       <h2>📘 学習会ポータル</h2>
       <div class="step-badge">STEP 1 / 3　メールアドレス確認</div>
       <p class="muted" style="margin-bottom:20px;">
