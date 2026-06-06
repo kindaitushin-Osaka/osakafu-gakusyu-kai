@@ -290,6 +290,7 @@
         <button onclick="showTab('materials', this)">資料</button>
         <button onclick="showTab('faq', this)">FAQ</button>
         <button onclick="showTab('members', this)">メンバー</button>
+        <button onclick="showTab('timer', this)">タイマー</button>
         <button onclick="showTab('rules', this)">会則・ルール</button>
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('about', this)">ロゴマーク</button>
@@ -419,7 +420,177 @@
           <div id="memberList" class="grid grid-3"></div>
         </div>
       </section>
- 
+ <!-- タイマー -->
+<section id="timerTab" class="tab-content">
+  <div class="card">
+    <div class="section-head"><h2 class="section-title">⏱️ 学習・試験タイマー</h2></div>
+    <style>
+      .tmr-wrap{max-width:380px;margin:0 auto;padding:1rem 0;text-align:center}
+      .tmr-tab-bar{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem}
+      .tmr-tab-btn{padding:7px 20px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--gray);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+      .tmr-tab-btn.active{background:var(--blue-light);color:var(--blue-dark);border-color:transparent}
+      .tmr-tab-content{display:none}
+      .tmr-tab-content.active{display:block}
+      .tmr-mode-bar{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem}
+      .tmr-mode-btn{padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--gray);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+      .tmr-mode-btn.active{background:var(--blue-light);color:var(--blue-dark);border-color:transparent}
+      .tmr-clock{width:200px;height:200px;border-radius:50%;border:1px solid var(--line);background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1.5rem;position:relative}
+      .tmr-clock.warning{border-color:#BA7517;background:#fff8e6}
+      .tmr-svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+      .tmr-time{font-size:42px;font-weight:900;color:var(--ink);z-index:1;line-height:1}
+      .tmr-label{font-size:12px;color:var(--gray);z-index:1;margin-top:4px}
+      .tmr-alert{display:none;background:#fff3cd;color:#856404;font-size:12px;padding:4px 14px;border-radius:999px;margin-bottom:12px;font-weight:700}
+      .tmr-alert.show{display:inline-block}
+      .tmr-controls{display:flex;gap:12px;justify-content:center;margin-bottom:1.5rem}
+      .tmr-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:white;color:var(--ink);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+      .tmr-btn:hover{background:#f3f6f9}
+      .tmr-btn.primary{background:var(--blue);color:white;border-color:transparent;width:56px;height:56px;font-size:24px}
+      .tmr-btn.primary:hover{background:var(--blue-dark)}
+      .tmr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem}
+      .tmr-stats2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem}
+      .tmr-stat{background:#f3f6f9;border-radius:10px;padding:10px 8px}
+      .tmr-stat-val{font-size:20px;font-weight:900;color:var(--blue-dark)}
+      .tmr-stat-lbl{font-size:11px;color:var(--gray)}
+      .tmr-set-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px}
+      .tmr-set-row label{font-size:13px;color:var(--gray);min-width:80px;text-align:right}
+      .tmr-set-row input[type=range]{width:110px}
+      .tmr-set-row span{font-size:13px;font-weight:700;color:var(--ink);min-width:40px}
+      .tmr-sec-label{font-size:12px;color:#9ca3af;margin:1rem 0 0.5rem}
+    </style>
+    <div class="tmr-wrap">
+      <div class="tmr-tab-bar">
+        <button class="tmr-tab-btn active" onclick="tmrSwitchTab('pomodoro',this)">🍅 ポモドーロ</button>
+        <button class="tmr-tab-btn" onclick="tmrSwitchTab('exam',this)">📝 試験モード</button>
+      </div>
+      <div id="tmr-tab-pomodoro" class="tmr-tab-content active">
+        <div class="tmr-mode-bar">
+          <button class="tmr-mode-btn active" id="tmr-btn-work" onclick="tmrSetMode('work')">勉強</button>
+          <button class="tmr-mode-btn" id="tmr-btn-short" onclick="tmrSetMode('short')">短い休憩</button>
+          <button class="tmr-mode-btn" id="tmr-btn-long" onclick="tmrSetMode('long')">長い休憩</button>
+        </div>
+        <div class="tmr-clock">
+          <svg class="tmr-svg" width="200" height="200" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#dbe3ec" stroke-width="6"/>
+            <circle id="tmr-ring" cx="100" cy="100" r="90" fill="none" stroke="#3b6ea5" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="0" stroke-linecap="round"/>
+          </svg>
+          <div class="tmr-time" id="tmr-display">25:00</div>
+          <div class="tmr-label" id="tmr-mode-label">勉強時間</div>
+        </div>
+        <div class="tmr-controls">
+          <button class="tmr-btn" onclick="tmrReset()">↺</button>
+          <button class="tmr-btn primary" onclick="tmrToggle()"><span id="tmr-play-icon">▶</span></button>
+          <button class="tmr-btn" onclick="tmrSkip()">⏭</button>
+        </div>
+        <div class="tmr-stats">
+          <div class="tmr-stat"><div class="tmr-stat-val" id="tmr-stat-p">0</div><div class="tmr-stat-lbl">ポモドーロ</div></div>
+          <div class="tmr-stat"><div class="tmr-stat-val" id="tmr-stat-m">0</div><div class="tmr-stat-lbl">学習分</div></div>
+          <div class="tmr-stat"><div class="tmr-stat-val" id="tmr-stat-b">0</div><div class="tmr-stat-lbl">休憩回数</div></div>
+        </div>
+        <div class="tmr-sec-label">設定</div>
+        <div class="tmr-set-row"><label>勉強時間</label><input type="range" min="5" max="60" step="5" value="25" oninput="tmrUpdateSetting('work',this.value)"><span id="tmr-lbl-work">25分</span></div>
+        <div class="tmr-set-row"><label>短い休憩</label><input type="range" min="1" max="15" step="1" value="5" oninput="tmrUpdateSetting('short',this.value)"><span id="tmr-lbl-short">5分</span></div>
+        <div class="tmr-set-row"><label>長い休憩</label><input type="range" min="5" max="30" step="5" value="15" oninput="tmrUpdateSetting('long',this.value)"><span id="tmr-lbl-long">15分</span></div>
+      </div>
+      <div id="tmr-tab-exam" class="tmr-tab-content">
+        <div id="tmr-exam-alert" class="tmr-alert">⚠️ 残り時間に注意！</div>
+        <div class="tmr-clock" id="tmr-exam-face">
+          <svg class="tmr-svg" width="200" height="200" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#dbe3ec" stroke-width="6"/>
+            <circle id="tmr-exam-ring" cx="100" cy="100" r="90" fill="none" stroke="#3b6ea5" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="0" stroke-linecap="round"/>
+          </svg>
+          <div class="tmr-time" id="tmr-exam-display">50:00</div>
+          <div class="tmr-label" id="tmr-exam-label">試験時間</div>
+        </div>
+        <div class="tmr-controls">
+          <button class="tmr-btn" onclick="tmrExamReset()">↺</button>
+          <button class="tmr-btn primary" onclick="tmrExamToggle()"><span id="tmr-exam-icon">▶</span></button>
+        </div>
+        <div class="tmr-stats2">
+          <div class="tmr-stat"><div class="tmr-stat-val" id="tmr-exam-elapsed">0分</div><div class="tmr-stat-lbl">経過時間</div></div>
+          <div class="tmr-stat"><div class="tmr-stat-val" id="tmr-exam-rem">50分</div><div class="tmr-stat-lbl">残り時間</div></div>
+        </div>
+        <div class="tmr-sec-label">試験設定</div>
+        <div class="tmr-set-row"><label>試験時間</label><input type="range" min="10" max="120" step="10" value="50" oninput="tmrExamSetting('exam',this.value)"><span id="tmr-lbl-exam">50分</span></div>
+        <div class="tmr-set-row"><label>警告タイミング</label><input type="range" min="5" max="30" step="5" value="10" oninput="tmrExamSetting('warn',this.value)"><span id="tmr-lbl-warn">残10分</span></div>
+      </div>
+    </div>
+    <script>
+      const TMR_CIRC=565;
+      const TMR_MODES={work:{label:'勉強時間',mins:25},short:{label:'短い休憩',mins:5},long:{label:'長い休憩',mins:15}};
+      let tmrMode='work',tmrTotal=1500,tmrRem=1500,tmrRunning=false,tmrInterval=null;
+      let tmrPomo=0,tmrMins=0,tmrBreaks=0;
+      let tmrExamTotal=3000,tmrExamRem=3000,tmrExamRunning=false,tmrExamInterval=null;
+      let tmrWarnMins=10,tmrWarned=false;
+
+      function tmrSwitchTab(tab,btn){
+        document.querySelectorAll('.tmr-tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tmr-tab-content').forEach(c=>c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tmr-tab-'+tab).classList.add('active');
+      }
+      function tmrSetMode(mode){
+        if(tmrRunning)return;
+        tmrMode=mode;
+        document.querySelectorAll('.tmr-mode-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById('tmr-btn-'+mode).classList.add('active');
+        document.getElementById('tmr-mode-label').textContent=TMR_MODES[mode].label;
+        tmrTotal=TMR_MODES[mode].mins*60;tmrRem=tmrTotal;
+        tmrUpdateDisp();tmrUpdateRing();
+      }
+      function tmrUpdateSetting(mode,val){
+        TMR_MODES[mode].mins=parseInt(val);
+        document.getElementById('tmr-lbl-'+mode).textContent=val+'分';
+        if(mode===tmrMode&&!tmrRunning){tmrTotal=TMR_MODES[mode].mins*60;tmrRem=tmrTotal;tmrUpdateDisp();tmrUpdateRing();}
+      }
+      function tmrUpdateDisp(){
+        const m=Math.floor(tmrRem/60),s=tmrRem%60;
+        document.getElementById('tmr-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      }
+      function tmrUpdateRing(){
+        const pct=tmrRem/tmrTotal;
+        document.getElementById('tmr-ring').style.strokeDashoffset=TMR_CIRC*(1-pct);
+        document.getElementById('tmr-ring').setAttribute('stroke',tmrMode==='work'?'#3b6ea5':'#1D9E75');
+      }
+      function tmrToggle(){
+        if(tmrRunning){clearInterval(tmrInterval);tmrRunning=false;document.getElementById('tmr-play-icon').textContent='▶';}
+        else{tmrRunning=true;document.getElementById('tmr-play-icon').textContent='⏸';
+          tmrInterval=setInterval(()=>{
+            if(tmrRem<=0){clearInterval(tmrInterval);tmrRunning=false;document.getElementById('tmr-play-icon').textContent='▶';tmrComplete();return;}
+            tmrRem--;tmrUpdateDisp();tmrUpdateRing();
+          },1000);
+        }
+      }
+      function tmrComplete(){
+        tmrBeep(3);
+        if(tmrMode==='work'){tmrPomo++;tmrMins+=TMR_MODES.work.mins;document.getElementById('tmr-stat-p').textContent=tmrPomo;document.getElementById('tmr-stat-m').textContent=tmrMins;tmrSetMode(tmrPomo%4===0?'long':'short');}
+        else{tmrBreaks++;document.getElementById('tmr-stat-b').textContent=tmrBreaks;tmrSetMode('work');}
+      }
+      function tmrReset(){clearInterval(tmrInterval);tmrRunning=false;document.getElementById('tmr-play-icon').textContent='▶';tmrTotal=TMR_MODES[tmrMode].mins*60;tmrRem=tmrTotal;tmrUpdateDisp();tmrUpdateRing();}
+      function tmrSkip(){clearInterval(tmrInterval);tmrRunning=false;document.getElementById('tmr-play-icon').textContent='▶';tmrComplete();}
+      function tmrExamSetting(type,val){
+        if(type==='exam'){tmrExamTotal=parseInt(val)*60;document.getElementById('tmr-lbl-exam').textContent=val+'分';if(!tmrExamRunning){tmrExamRem=tmrExamTotal;tmrWarned=false;tmrExamUpdateDisp();tmrExamUpdateRing();tmrExamUpdateStats();}}
+        else{tmrWarnMins=parseInt(val);document.getElementById('tmr-lbl-warn').textContent='残'+val+'分';}
+      }
+      function tmrExamUpdateDisp(){const m=Math.floor(tmrExamRem/60),s=tmrExamRem%60;document.getElementById('tmr-exam-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+      function tmrExamUpdateRing(){const pct=tmrExamRem/tmrExamTotal;document.getElementById('tmr-exam-ring').style.strokeDashoffset=TMR_CIRC*(1-pct);document.getElementById('tmr-exam-ring').setAttribute('stroke',tmrExamRem<=tmrWarnMins*60?'#BA7517':'#3b6ea5');}
+      function tmrExamUpdateStats(){document.getElementById('tmr-exam-elapsed').textContent=Math.floor((tmrExamTotal-tmrExamRem)/60)+'分';document.getElementById('tmr-exam-rem').textContent=Math.ceil(tmrExamRem/60)+'分';}
+      function tmrExamToggle(){
+        if(tmrExamRunning){clearInterval(tmrExamInterval);tmrExamRunning=false;document.getElementById('tmr-exam-icon').textContent='▶';}
+        else{tmrExamRunning=true;document.getElementById('tmr-exam-icon').textContent='⏸';
+          tmrExamInterval=setInterval(()=>{
+            if(tmrExamRem<=0){clearInterval(tmrExamInterval);tmrExamRunning=false;document.getElementById('tmr-exam-icon').textContent='▶';document.getElementById('tmr-exam-label').textContent='試験終了！';tmrBeep(5);return;}
+            tmrExamRem--;
+            if(!tmrWarned&&tmrExamRem<=tmrWarnMins*60){tmrWarned=true;document.getElementById('tmr-exam-alert').classList.add('show');document.getElementById('tmr-exam-face').classList.add('warning');document.getElementById('tmr-exam-label').textContent='⚠️ 残り'+tmrWarnMins+'分！';tmrBeep(2);}
+            tmrExamUpdateDisp();tmrExamUpdateRing();tmrExamUpdateStats();
+          },1000);
+        }
+      }
+      function tmrExamReset(){clearInterval(tmrExamInterval);tmrExamRunning=false;tmrWarned=false;document.getElementById('tmr-exam-icon').textContent='▶';document.getElementById('tmr-exam-alert').classList.remove('show');document.getElementById('tmr-exam-face').classList.remove('warning');document.getElementById('tmr-exam-label').textContent='試験時間';tmrExamRem=tmrExamTotal;tmrExamUpdateDisp();tmrExamUpdateRing();tmrExamUpdateStats();}
+      function tmrBeep(times){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();for(let i=0;i<times;i++){const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=i===times-1?660:880;o.type='sine';g.gain.setValueAtTime(0.3,ctx.currentTime+i*0.35);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.35+0.3);o.start(ctx.currentTime+i*0.35);o.stop(ctx.currentTime+i*0.35+0.3);}}catch(e){}}
+      tmrUpdateDisp();tmrUpdateRing();tmrExamUpdateDisp();tmrExamUpdateRing();tmrExamUpdateStats();
+    </script>
+  </div>
+</section>
       <!-- 会則・ルール -->
       <section id="rulesTab" class="tab-content">
         <div class="card">
