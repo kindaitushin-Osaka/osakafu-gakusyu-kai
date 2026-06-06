@@ -1374,6 +1374,7 @@ ${s.endDate ? `<div class="muted">📅 ${escapeHTML(s.date)} 〜 ${escapeHTML(s.
  
     function renderMembers() {
 const memberKeyword = document.getElementById("memberSearch")?.value?.trim().toLowerCase() || "";
+ document.getElementById("memberCount").textContent = data.members.length;
 const filteredMembers = data.members.map((m, i) => ({...m, _index: i})).filter(m => {
   if (!memberKeyword) return true;
   const name = (window.usersMap && window.usersMap[m.email] ? window.usersMap[m.email] : m.name).toLowerCase();
