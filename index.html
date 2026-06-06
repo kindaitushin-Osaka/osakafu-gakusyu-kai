@@ -1424,11 +1424,24 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
     // ============================================================
     // サイドバー
     // ============================================================
-    function renderSideEvents() {
-      document.getElementById("sideEvents").innerHTML = data.schedules.slice(0,3).map(s => `
-        <div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}</div>
-      `).join("");
-    }
+function renderSideEvents() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = data.schedules
+    .filter(s => new Date(s.date + "T00:00:00") >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 3);
+  document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
+    const diff = Math.ceil((new Date(s.date + "T00:00:00") - today) / (1000 * 60 * 60 * 24));
+    const label = diff === 0 ? "🔴 今日！" : diff === 1 ? "🟡 明日！" : `🔵 あと${diff}日`;
+    return `
+      <div class="sidebar-item">
+        <strong>${escapeHTML(s.date)}</strong><br>
+        ${escapeHTML(s.title)}<br>
+        <span style="font-size:12px;font-weight:700;color:var(--blue-dark);">${label}</span>
+      </div>`;
+  }).join("") || '<div class="muted" style="font-size:13px;">予定はありません</div>';
+}
  
     // ============================================================
     // 管理ページ
