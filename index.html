@@ -1266,23 +1266,27 @@ function likeReply(postIndex, replyIndex) {
       renderAdminLists();
     }
  
-    function renderSchedules() {
-      document.getElementById("scheduleList").innerHTML = data.schedules.map((s, i) => {
-        const d = new Date(s.date + "T00:00:00");
-        return `<div class="schedule-card">
-          <div class="datebox"><div class="day">${d.getDate()}</div><div class="month">${d.getMonth()+1}月</div></div>
-          <div>
-            <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
-            <div class="title">${escapeHTML(s.title)}</div>
-<div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
-${s.endDate ? `<div class="muted">📅 ${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}</div>` : ''}
-          </div>
-          <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
-            ${s.joined ? '✓ 参加済み（キャンセル）' : '参加する'}
-          </button>
-        </div>`;
-      }).join("");
-    }
+function renderSchedules() {
+  const sorted = [...data.schedules]
+    .map((s, i) => ({...s, _index: i}))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  document.getElementById("scheduleList").innerHTML = sorted.map(s => {
+    const i = s._index;
+    const d = new Date(s.date + "T00:00:00");
+    return `<div class="schedule-card">
+      <div class="datebox"><div class="day">${d.getDate()}</div><div class="month">${d.getMonth()+1}月</div></div>
+      <div>
+        <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
+        <div class="title">${escapeHTML(s.title)}</div>
+        <div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
+        ${s.endDate ? `<div class="muted">📅 ${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}</div>` : ''}
+      </div>
+      <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
+        ${s.joined ? '✓ 参加済み（キャンセル）' : '参加する'}
+      </button>
+    </div>`;
+  }).join("");
+}
  
     // ============================================================
     // 資料
