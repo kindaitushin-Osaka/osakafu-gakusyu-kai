@@ -468,14 +468,15 @@ function initMemberListener() {
 
 window.firebaseSaveSchedule = async function (schedule) {
   try {
-    await addDoc(collection(db, "schedules"), {
-      date        : schedule.date,
-      title       : schedule.title,
-      place       : schedule.place  || "",
-      type        : schedule.type   || "勉強会",
-      participants: 0,
-      createdAt   : serverTimestamp()
-    });
+await addDoc(collection(db, "schedules"), {
+  date        : schedule.date,
+  endDate     : schedule.endDate || "",
+  title       : schedule.title,
+  place       : schedule.place  || "",
+  type        : schedule.type   || "勉強会",
+  participants: 0,
+  createdAt   : serverTimestamp()
+});
     console.log("スケジュール保存OK");
   } catch (err) {
     console.error("スケジュール保存失敗:", err);
