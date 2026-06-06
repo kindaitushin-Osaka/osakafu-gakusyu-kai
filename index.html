@@ -662,8 +662,17 @@
             <div class="card">
               <h3>スケジュール追加</h3>
               <div class="form-row">
-                <div class="form-group"><label>日付</label><input id="adminScheduleDate" type="date"></div>
-                <div class="form-group"><label>種別</label><select id="adminScheduleType"><option>勉強会</option><option>試験</option><option>交流会</option></select></div>
+                <div class="form-group"><label>開始日</label><input id="adminScheduleDate" type="date"></div>
+<div class="form-group"><label>終了日（任意・期間がある場合）</label><input id="adminScheduleEndDate" type="date"></div>
+                <div class="form-group"><label>種別</label><select id="adminScheduleType">
+  <option>勉強会</option>
+  <option>試験</option>
+  <option>交流会</option>
+  <option>卒ゼミ</option>
+  <option>スクーリング</option>
+  <option>オンデマンド</option>
+  <option>その他</option>
+</select></div>
               </div>
               <div class="form-row">
                 <div class="form-group"><label>タイトル</label><input id="adminScheduleTitle"></div>
@@ -999,14 +1008,18 @@
       if (btn) btn.classList.add("active");
     }
  
-    function typeClass(type) {
-      if (type === "重要") return "badge-important";
-      if (type === "イベント") return "badge-event";
-      if (type === "勉強会") return "badge-study";
-      if (type === "試験") return "badge-exam";
-      if (type === "交流会") return "badge-social";
-      return "badge-info";
-    }
+function typeClass(type) {
+  if (type === "重要") return "badge-important";
+  if (type === "イベント") return "badge-event";
+  if (type === "勉強会") return "badge-study";
+  if (type === "試験") return "badge-exam";
+  if (type === "交流会") return "badge-social";
+  if (type === "卒ゼミ") return "badge-important";
+  if (type === "スクーリング") return "badge-study";
+  if (type === "オンデマンド") return "badge-event";
+  if (type === "その他") return "badge-info";
+  return "badge-info";
+}
  
     // ============================================================
     // お知らせ（NEWバッジつき）
@@ -1202,15 +1215,16 @@ function likeReply(postIndex, replyIndex) {
       const date  = document.getElementById("adminScheduleDate").value;
       const title = document.getElementById("adminScheduleTitle").value.trim();
       if (!date || !title) return alert("日付とタイトルを入力してください");
-      const schedule = {
-        date, title,
-        place : document.getElementById("adminSchedulePlace").value.trim(),
-        type  : document.getElementById("adminScheduleType").value,
-        participants: 0, joined: false
-      };
+    const schedule = {
+     date, title,
+     endDate : document.getElementById("adminScheduleEndDate").value || "",
+    place   : document.getElementById("adminSchedulePlace").value.trim(),
+    type    : document.getElementById("adminScheduleType").value,
+  participants: 0, joined: false
+};
       data.schedules.push(schedule);
       if (typeof window.firebaseSaveSchedule === "function") window.firebaseSaveSchedule(schedule);
-      ["adminScheduleDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
+ ["adminScheduleDate","adminScheduleEndDate","adminScheduleTitle","adminSchedulePlace"].forEach(id => document.getElementById(id).value = "");
       saveData();
       renderAdminLists();
     }
@@ -1260,7 +1274,8 @@ function likeReply(postIndex, replyIndex) {
           <div>
             <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
             <div class="title">${escapeHTML(s.title)}</div>
-            <div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
+<div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
+${s.endDate ? `<div class="muted">📅 ${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}</div>` : ''}
           </div>
           <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
             ${s.joined ? '✓ 参加済み（キャンセル）' : '参加する'}
@@ -1424,24 +1439,7 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
     // ============================================================
     // サイドバー
     // ============================================================
-function renderSideEvents() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const upcoming = data.schedules
-    .filter(s => new Date(s.date + "T00:00:00") >= today)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 3);
-  document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
-    const diff = Math.ceil((new Date(s.date + "T00:00:00") - today) / (1000 * 60 * 60 * 24));
-    const label = diff === 0 ? "🔴 今日！" : diff === 1 ? "🟡 明日！" : `🔵 あと${diff}日`;
-    return `
-      <div class="sidebar-item">
-        <strong>${escapeHTML(s.date)}</strong><br>
-        ${escapeHTML(s.title)}<br>
-        <span style="font-size:12px;font-weight:700;color:var(--blue-dark);">${label}</span>
-      </div>`;
-  }).join("") || '<div class="muted" style="font-size:13px;">予定はありません</div>';
-}
+
  
     // ============================================================
     // 管理ページ
@@ -1455,7 +1453,40 @@ function renderSideEvents() {
       fillAdminSettings();
       renderAdminLists();
     }
- 
+ function renderSideEvents() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = data.schedules
+    .filter(s => {
+      const endDate = s.endDate ? new Date(s.endDate + "T00:00:00") : new Date(s.date + "T00:00:00");
+      return endDate >= today;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 3);
+  document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
+    const startDate = new Date(s.date + "T00:00:00");
+    const endDate   = s.endDate ? new Date(s.endDate + "T00:00:00") : startDate;
+    const diffStart = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
+    const diffEnd   = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+    let label = "";
+    if (diffStart > 0) {
+      label = `🔵 あと${diffStart}日から開始`;
+    } else if (diffEnd === 0) {
+      label = `🔴 今日まで！`;
+    } else if (diffEnd > 0) {
+      label = `🟢 受付中（あと${diffEnd}日）`;
+    }
+    const dateStr = s.endDate
+      ? `${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}`
+      : escapeHTML(s.date);
+    return `
+      <div class="sidebar-item">
+        <strong style="font-size:12px;">${dateStr}</strong><br>
+        ${escapeHTML(s.title)}<br>
+        <span style="font-size:12px;font-weight:700;color:var(--blue-dark);">${label}</span>
+      </div>`;
+  }).join("") || '<div class="muted" style="font-size:13px;">予定はありません</div>';
+}
     function todayStr() {
       const d = new Date();
       return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
