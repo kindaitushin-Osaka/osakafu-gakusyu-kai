@@ -765,8 +765,18 @@ window.downloadBackup = async function() {
     const backup = { exportedAt: new Date().toISOString() };
     const noticesSnap  = await getDocs(collection(db, "notices"));
     backup.notices     = noticesSnap.docs.map(d => ({id: d.id, ...d.data()}));
-    const boardSnap    = await getDocs(collection(db, "boardPosts"));
-    backup.boardPosts  = boardSnap.docs.map(d => ({id: d.id, ...d.data()}));
+const boardSnap = await getDocs(collection(db, "boardPosts"));
+const boardPosts = [];
+for (const boardDoc of boardSnap.docs) {
+  const postData = { id: boardDoc.id, ...boardDoc.data() };
+  // サブコレクション（返信）も取得
+  const repliesSnap = await getDocs(
+    query(collection(db, "boardPosts", boardDoc.id, "replies"), orderBy("created", "asc"))
+  );
+  postData.replies = repliesSnap.docs.map(r => ({id: r.id, ...r.data()}));
+  boardPosts.push(postData);
+}
+backup.boardPosts = boardPosts;
     const scheduleSnap = await getDocs(collection(db, "schedules"));
     backup.schedules   = scheduleSnap.docs.map(d => ({id: d.id, ...d.data()}));
     const faqSnap      = await getDocs(collection(db, "faqs"));
