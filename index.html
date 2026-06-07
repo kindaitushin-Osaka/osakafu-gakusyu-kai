@@ -1212,6 +1212,7 @@ function likeReply(postIndex, replyIndex) {
     // スケジュール
     // ============================================================
     function addSchedule() {
+      console.log("endDate確認:", document.getElementById("adminScheduleEndDate")?.value);
       const date  = document.getElementById("adminScheduleDate").value;
       const title = document.getElementById("adminScheduleTitle").value.trim();
       if (!date || !title) return alert("日付とタイトルを入力してください");
@@ -1270,20 +1271,38 @@ function renderSchedules() {
   const sorted = [...data.schedules]
     .map((s, i) => ({...s, _index: i}))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+
   document.getElementById("scheduleList").innerHTML = sorted.map(s => {
     const i = s._index;
     const d = new Date(s.date + "T00:00:00");
-    return `<div class="schedule-card">
-      <div class="datebox"><div class="day">${d.getDate()}</div><div class="month">${d.getMonth()+1}月</div></div>
-      <div>
-        <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
-        <div class="title">${escapeHTML(s.title)}</div>
-        <div class="muted">📍 ${escapeHTML(s.place)} ／ 参加 ${s.participants}名</div>
-        ${s.endDate ? `<div class="muted">📅 ${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}</div>` : ''}
+    const hasRange = s.endDate && s.endDate !== s.date;
+    const endD = hasRange ? new Date(s.endDate + "T00:00:00") : null;
+
+    const dateLabel = hasRange
+      ? `${d.getDate()}日〜${endD.getDate()}日`
+      : `${d.getDate()}`;
+    const monthLabel = `${d.getMonth() + 1}月`;
+
+    return `
+    <div style="border:1px solid var(--line);border-radius:14px;background:white;padding:16px;transition:.15s;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="datebox" style="min-width:72px;flex-shrink:0;">
+          <div class="day" style="font-size:${hasRange ? '16px' : '24px'};">${dateLabel}</div>
+          <div class="month">${monthLabel}</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="margin-bottom:4px;">
+            <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
+          </div>
+          <div class="title" style="margin:4px 0;">${escapeHTML(s.title)}</div>
+          <div class="muted">📍 ${escapeHTML(s.place || "未定")} ／ 参加 ${s.participants}名</div>
+        </div>
+        <div style="flex-shrink:0;">
+          <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
+            ${s.joined ? '✓ キャンセル' : '参加する'}
+          </button>
+        </div>
       </div>
-      <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
-        ${s.joined ? '✓ 参加済み（キャンセル）' : '参加する'}
-      </button>
     </div>`;
   }).join("");
 }
@@ -1467,7 +1486,7 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
       return endDate >= today;
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 3);
+    .slice(0, 5);
   document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
     const startDate = new Date(s.date + "T00:00:00");
     const endDate   = s.endDate ? new Date(s.endDate + "T00:00:00") : startDate;
