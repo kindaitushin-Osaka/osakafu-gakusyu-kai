@@ -759,4 +759,38 @@ function initRulesListener() {
 }
 
 console.log("firebase.js 読込OK");
-
+window.downloadBackup = async function() {
+  try {
+    alert("バックアップデータを取得中です。しばらくお待ちください...");
+    const backup = { exportedAt: new Date().toISOString() };
+    const noticesSnap  = await getDocs(collection(db, "notices"));
+    backup.notices     = noticesSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const boardSnap    = await getDocs(collection(db, "boardPosts"));
+    backup.boardPosts  = boardSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const scheduleSnap = await getDocs(collection(db, "schedules"));
+    backup.schedules   = scheduleSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const faqSnap      = await getDocs(collection(db, "faqs"));
+    backup.faqs        = faqSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const memberSnap   = await getDocs(collection(db, "members"));
+    backup.members     = memberSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const officerSnap  = await getDocs(collection(db, "officers"));
+    backup.officers    = officerSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    const settingsSnap = await getDoc(doc(db, "settings", "main"));
+    backup.settings    = settingsSnap.exists() ? settingsSnap.data() : {};
+    const rulesSnap    = await getDoc(doc(db, "rules", "main"));
+    backup.rulesText   = rulesSnap.exists() ? rulesSnap.data().text : "";
+    const blob    = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url     = URL.createObjectURL(blob);
+    const a       = document.createElement("a");
+    const date    = new Date();
+    const dateStr = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+    a.href        = url;
+    a.download    = `gakusyukai_backup_${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert("バックアップが完了しました！");
+  } catch(err) {
+    console.error("バックアップ失敗:", err);
+    alert("バックアップに失敗しました。");
+  }
+};
