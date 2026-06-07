@@ -1,5 +1,5 @@
 // ============================================================
-// firebase.js  ―  
+// firebase.js  ―  大改造版
 // 表示名管理（usersコレクション）・参加キャンセル・全機能対応
 // ============================================================
 
@@ -41,6 +41,15 @@ const app       = initializeApp(firebaseConfig);
 const db        = getFirestore(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
+// ── 管理者パスワード（Firestoreから取得）───────────────────
+window.adminPassword = "admin1234"; // Firestore取得前の仮パスワード
+
+getDoc(doc(db, "settings", "admin")).then(snap => {
+  if (snap.exists() && snap.data().password) {
+    window.adminPassword = snap.data().password;
+    console.log("管理者パスワード取得OK");
+  }
+}).catch(err => console.error("管理者パスワード取得失敗:", err));
 
 // ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
@@ -535,13 +544,14 @@ function initScheduleListener() {
     snapshot.docs.forEach((d, i) => {
       const raw = d.data();
       schedules.push({
-        date        : raw.date         || "",
-        title       : raw.title        || "",
-        place       : raw.place        || "",
-        type        : raw.type         || "勉強会",
-        participants: raw.participants  || 0,
-        joined      : false
-      });
+  date        : raw.date         || "",
+  endDate     : raw.endDate      || "",
+  title       : raw.title        || "",
+  place       : raw.place        || "",
+  type        : raw.type         || "勉強会",
+  participants: raw.participants  || 0,
+  joined      : false
+});
       scheduleIdMap[i] = d.id;
     });
     if (window.data && window.renderSchedules) {
