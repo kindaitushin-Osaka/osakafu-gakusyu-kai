@@ -41,6 +41,7 @@ const app       = initializeApp(firebaseConfig);
 const db        = getFirestore(app);
 const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
+window.db = db;
 // ── 管理者パスワード（Firestoreから取得）───────────────────
 window.adminPassword = "admin1234"; // Firestore取得前の仮パスワード
 
