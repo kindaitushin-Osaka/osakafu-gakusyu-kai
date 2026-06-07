@@ -729,7 +729,16 @@ function initOfficerListener() {
     }
   }, (err) => console.error("役員onSnapshotエラー:", err));
 }
-
+window.firebaseUpdateOfficer = async function(localIndex, updatedData) {
+  const docId = officerIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "officers", docId), updatedData);
+    console.log("役員メッセージ更新OK");
+  } catch(err) {
+    console.error("役員メッセージ更新失敗:", err);
+  }
+};
 // ============================================================
 // 【会則・ルール本文】rulesコレクション
 // ============================================================
