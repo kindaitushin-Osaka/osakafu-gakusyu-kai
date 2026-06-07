@@ -294,7 +294,6 @@
         <button onclick="showTab('rules', this)">会則・ルール</button>
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('about', this)">ロゴマーク</button>
-        <button onclick="showTab('admin', this)">管理</button>
       </nav>
       <div id="userInfo" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;">
         <span id="userDisplayName" style="color:#b8c7d6;font-size:12px;"></span>
@@ -638,9 +637,9 @@
       <!-- 管理 -->
       <section id="adminTab" class="tab-content">
         <div class="card">
-          <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">管理者のみ◆admin1234</span></div>
+          <div class="section-head"><h2 class="section-title">🔐 管理ページ</h2><span class="muted">管理者のみ</span></div>
           <div id="adminLogin">
-            <div class="admin-note">この管理機能は試作用です。本番運用では正式な認証方式が必要です。</div>
+          <div class="admin-note">管理者専用ページです。許可された方のみログインしてください。</div>
             <div class="form-group"><label>管理者パスワード</label><input id="adminPass" type="password" placeholder="パスワードを入力" /></div>
             <button class="btn" onclick="loginAdmin()">ログイン</button>
           </div>
@@ -726,8 +725,18 @@
               <div class="form-group"><label>オープンチャットURL</label><input id="adminCircleChat" placeholder="https://line.me/ti/g2/..."></div>
               <div class="form-group"><label>オープンチャットボタン名</label><input id="adminCircleChatLabel" placeholder="例：📱 オープンチャットに参加する"></div>
               <button class="btn" onclick="saveSettings()">設定を保存</button>
-              <button class="btn btn-danger" onclick="resetAllData()" style="margin-left:8px;">初期化</button>
-            </div>
+<button class="btn btn-danger" onclick="confirmReset()" style="margin-left:8px;">初期化</button>
+<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
+  <p style="font-size:13px;color:var(--gray);margin-bottom:10px;">【バックアップ・復元】</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="btn btn-light" onclick="downloadBackup()">💾 バックアップDL</button>
+    <label class="btn btn-ghost" style="cursor:pointer;">
+      📂 JSONから復元
+      <input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreBackup(event)">
+    </label>
+  </div>
+  <p style="font-size:12px;color:var(--gray);margin-top:8px;">⚠️ 復元するとFirestoreの全データが上書きされます</p>
+</div>
           </div>
         </div>
       </section>
@@ -743,8 +752,7 @@
  
   <footer>
     <div id="footerContact"></div>
-    <div style="margin-top:8px;font-size:12px;color:#8fa3b8;">※本サイトは近畿大学通信教育部大阪府学習会による自主運営サイトです※</div>
-    <div style="margin-top:8px;"><span class="admin-secret" onclick="showTab('admin')">管理ページ</span></div>
+<div style="margin-top:8px;font-size:12px;color:#8fa3b8;cursor:default;" id="footerSecret">※本サイトは近畿大学通信教育部大阪府学習会による自主運営サイトです※</div>
   </footer>
  
   <!-- STEP1：近大メール入力 -->
@@ -869,7 +877,103 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
       return structuredClone(defaultData);
     }
- 
+ // ============================================================
+// 隠し管理アクセス（PC：Shift+Alt+A / スマホ：5回タップ）
+// ============================================================
+document.addEventListener('keydown', function(e) {
+  if (e.shiftKey && e.altKey && e.key === 'A') {
+    showTab('admin');
+  }
+});
+
+let tapCount = 0;
+let tapTimer = null;
+document.addEventListener('DOMContentLoaded', function() {
+  const footerSecret = document.getElementById('footerSecret');
+  if (footerSecret) {
+    footerSecret.addEventListener('click', function() {
+      tapCount++;
+      clearTimeout(tapTimer);
+      if (tapCount >= 5) {
+        tapCount = 0;
+        showTab('admin');
+      }
+      tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+    });
+  }
+});
+
+// ============================================================
+// 初期化（パスワード再入力必須）
+// ============================================================
+function confirmReset() {
+  const pass = prompt("初期化を実行するには管理者パスワードを入力してください");
+  if (pass === null) return;
+  if (pass !== "admin1234") return alert("パスワードが違います。初期化を中止しました。");
+  if (!confirm("本当に全データを削除しますか？")) return;
+  if (!confirm("この操作は元に戻せません。本当に実行しますか？")) return;
+  resetAllData();
+}
+
+// ============================================================
+// バックアップDL
+// ============================================================
+function downloadBackup() {
+  const backup = {
+    exportedAt : new Date().toISOString(),
+    notices    : data.notices    || [],
+    boardPosts : data.boardPosts || [],
+    schedules  : data.schedules  || [],
+    faqs       : data.faqs       || [],
+    members    : data.members    || [],
+    officers   : data.officers   || [],
+    rulesText  : data.rulesText  || "",
+    settings   : data.settings   || {}
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const date = new Date();
+  const dateStr = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+  a.href     = url;
+  a.download = `gakusyukai_backup_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("バックアップをダウンロードしました");
+}
+
+// ============================================================
+// JSONから復元
+// ============================================================
+function restoreBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const pass = prompt("復元を実行するには管理者パスワードを入力してください");
+  if (pass === null) return;
+  if (pass !== "admin1234") return alert("パスワードが違います。復元を中止しました。");
+  if (!confirm("現在のデータをバックアップファイルで上書きします。よろしいですか？")) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (backup.notices)    data.notices    = backup.notices;
+      if (backup.boardPosts) data.boardPosts = backup.boardPosts;
+      if (backup.schedules)  data.schedules  = backup.schedules;
+      if (backup.faqs)       data.faqs       = backup.faqs;
+      if (backup.members)    data.members    = backup.members;
+      if (backup.officers)   data.officers   = backup.officers;
+      if (backup.rulesText)  data.rulesText  = backup.rulesText;
+      if (backup.settings)   data.settings   = backup.settings;
+      saveData();
+      alert("復元が完了しました");
+      document.getElementById("restoreFile").value = "";
+    } catch(err) {
+      alert("ファイルの読み込みに失敗しました。正しいバックアップファイルか確認してください。");
+    }
+  };
+  reader.readAsText(file);
+}
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); renderAll(); }
  
     function escapeHTML(str) {
@@ -1468,15 +1572,15 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
     // ============================================================
     // 管理ページ
     // ============================================================
-    function loginAdmin() {
-      if (document.getElementById("adminPass").value !== "admin1234") return alert("パスワードが違います");
-      document.getElementById("adminLogin").style.display = "none";
-      document.getElementById("adminPanel").style.display = "grid";
-      renderMembers();
-      renderBoard();
-      fillAdminSettings();
-      renderAdminLists();
-    }
+function loginAdmin() {
+  if (document.getElementById("adminPass").value !== window.adminPassword) return alert("パスワードが違います");
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("adminPanel").style.display = "grid";
+  renderMembers();
+  renderBoard();
+  fillAdminSettings();
+  renderAdminLists();
+}
  function renderSideEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
