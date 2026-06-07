@@ -1720,14 +1720,16 @@ function loginAdmin() {
           </div>
         </div>`).join("");
  
-      const officers = data.officers || [];
-      document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
-        <div class="sidebar-item">
-          <strong>${escapeHTML(o.role)}</strong>　${escapeHTML(o.name)}
-          <div style="margin-top:8px;">
-            <button class="btn btn-danger btn-small" onclick="deleteOfficer(${i})">削除</button>
-          </div>
-        </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
+ const officers = data.officers || [];
+document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
+  <div class="sidebar-item">
+    <strong>${escapeHTML(o.role)}</strong>　${escapeHTML(o.name)}
+    <p style="font-size:13px;margin-top:4px;">${escapeHTML(o.message)}</p>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+      <button class="btn btn-light btn-small" onclick="editOfficer(${i})">編集</button>
+      <button class="btn btn-danger btn-small" onclick="deleteOfficer(${i})">削除</button>
+    </div>
+  </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
     }
  
     function saveSettings() {
@@ -1833,7 +1835,23 @@ function loginAdmin() {
       saveData();
       renderAdminLists();
     }
- 
+ function editOfficer(i) {
+  const o = data.officers[i];
+  const newRole = prompt("役職名を編集してください", o.role);
+  if (newRole === null) return;
+  const newName = prompt("お名前を編集してください", o.name);
+  if (newName === null) return;
+  const newMessage = prompt("メッセージを編集してください", o.message);
+  if (newMessage === null) return;
+  o.role    = newRole;
+  o.name    = newName;
+  o.message = newMessage;
+  if (typeof window.firebaseUpdateOfficer === "function") {
+    window.firebaseUpdateOfficer(i, { role: newRole, name: newName, message: newMessage });
+  }
+  saveData();
+  renderAdminLists();
+}
     function saveRules() {
       const text = document.getElementById("adminRulesText").value;
       data.rulesText = text;
