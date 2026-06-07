@@ -888,9 +888,20 @@ document.addEventListener('keydown', function(e) {
 
 let tapCount = 0;
 let tapTimer = null;
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
   const footerSecret = document.getElementById('footerSecret');
   if (footerSecret) {
+    footerSecret.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      tapCount++;
+      clearTimeout(tapTimer);
+      if (tapCount >= 5) {
+        tapCount = 0;
+        showTab('admin');
+      }
+      tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+    });
+    // PC・Androidクリック兼用
     footerSecret.addEventListener('click', function() {
       tapCount++;
       clearTimeout(tapTimer);
