@@ -1494,24 +1494,37 @@ function renderFaq() {
       saveData();
     }
  
-    function editMember(index) {
-      const m       = data.members[index];
-      const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
-      if (!isAdmin) {
-        const inputPass = prompt("編集用パスワードを入力してください");
-        if (inputPass === null) return;
-        if (inputPass !== m.password) return alert("パスワードが違います");
-      }
-      const newGrade = prompt("学年を入力してください", m.grade || "");
-      if (newGrade === null) return;
-      let newComment = prompt("コメントを編集してください（50文字以内）", m.comment || "");
-      if (newComment === null) return;
-      newComment = newComment.slice(0, 50);
-      m.grade   = newGrade;
-      m.comment = newComment;
-      if (typeof window.firebaseUpdateMember === "function") window.firebaseUpdateMember(index, { grade: newGrade, comment: newComment });
-      saveData();
-    }
+function editMember(index) {
+  const m       = data.members[index];
+  const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
+  if (!isAdmin) {
+    const inputPass = prompt("編集用パスワードを入力してください");
+    if (inputPass === null) return;
+    if (inputPass !== m.password) return alert("パスワードが違います");
+  }
+  const newGrade = prompt("学年を入力してください\n（1年／2年／3年／4年／履修生／卒業生）", m.grade || "");
+  if (newGrade === null) return;
+  const newSubject = prompt("得意科目を入力してください", m.subject || "");
+  if (newSubject === null) return;
+  const newStyle = prompt("勉強スタイルを入力してください\n（朝型／夜型／週末集中）", m.style || "");
+  if (newStyle === null) return;
+  let newComment = prompt("コメントを編集してください（50文字以内）", m.comment || "");
+  if (newComment === null) return;
+  newComment = newComment.slice(0, 50);
+  m.grade   = newGrade;
+  m.subject = newSubject;
+  m.style   = newStyle;
+  m.comment = newComment;
+  if (typeof window.firebaseUpdateMember === "function") {
+    window.firebaseUpdateMember(index, {
+      grade  : newGrade,
+      subject: newSubject,
+      style  : newStyle,
+      comment: newComment
+    });
+  }
+  saveData();
+}
  
     function deleteMember(index) {
       if (!confirm("このメンバーを削除しますか？")) return;
