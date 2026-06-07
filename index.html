@@ -366,10 +366,21 @@
         </div>
       </section>
  
-      <!-- FAQ -->
+<!-- FAQ -->
       <section id="faqTab" class="tab-content">
         <div class="card">
-          <div class="section-head"><h2 class="section-title">❓ FAQ</h2><span class="muted">クリックで開閉</span></div>
+          <div class="section-head"><h2 class="section-title">❓ FAQ（よくある質問）</h2><span class="muted">クリックで開閉</span></div>
+          <div class="filter-bar">
+            <button class="active" onclick="setFaqFilter('すべて', this)">すべて</button>
+            <button onclick="setFaqFilter('履修', this)">履修</button>
+            <button onclick="setFaqFilter('試験', this)">試験</button>
+            <button onclick="setFaqFilter('レポート', this)">レポート</button>
+            <button onclick="setFaqFilter('スクーリング', this)">スクーリング</button>
+            <button onclick="setFaqFilter('オンデマンド', this)">オンデマンド</button>
+            <button onclick="setFaqFilter('学習方法', this)">学習方法</button>
+            <button onclick="setFaqFilter('サークル', this)">サークル</button>
+            <button onclick="setFaqFilter('その他', this)">その他</button>
+          </div>
           <div id="faqList" class="grid"></div>
         </div>
       </section>
@@ -680,16 +691,27 @@
               <button class="btn" onclick="addSchedule()">スケジュールを追加</button>
               <div id="adminScheduleList" class="grid" style="margin-top:14px;"></div>
             </div>
-            <div class="card">
-              <h3>FAQ追加</h3>
-              <div class="form-row">
-                <div class="form-group"><label>カテゴリ</label><select id="adminFaqCategory"><option>履修</option><option>試験</option><option>レポート</option><option>サークルについて</option></select></div>
-                <div class="form-group"><label>質問</label><input id="adminFaqQuestion"></div>
-              </div>
-              <div class="form-group"><label>回答</label><textarea id="adminFaqAnswer"></textarea></div>
-              <button class="btn" onclick="addFaq()">FAQを追加</button>
-              <div id="adminFaqList" class="grid" style="margin-top:14px;"></div>
-            </div>
+ <div class="card">
+  <h3>FAQ追加</h3>
+  <div class="form-row">
+    <div class="form-group"><label>カテゴリ</label>
+      <select id="adminFaqCategory">
+        <option>履修</option>
+        <option>試験</option>
+        <option>レポート</option>
+        <option>スクーリング</option>
+        <option>オンデマンド</option><!--  -->
+        <option>学習方法</option>
+        <option>サークル</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="form-group"><label>質問</label><input id="adminFaqQuestion"></div>
+  </div>
+  <div class="form-group"><label>回答</label><textarea id="adminFaqAnswer"></textarea></div>
+  <button class="btn" onclick="addFaq()">FAQを追加</button>
+  <div id="adminFaqList" class="grid" style="margin-top:14px;"></div>
+</div>
             <div class="card">
               <h3>会則・ルール管理</h3>
               <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">【役員メッセージ追加】</p>
@@ -1423,16 +1445,28 @@ function renderSchedules() {
     // ============================================================
     function toggleFaq(el) { el.classList.toggle("open"); }
  
-    function renderFaq() {
-      document.getElementById("faqList").innerHTML = data.faqs.map(f => `
-        <div class="faq-card" onclick="toggleFaq(this)">
-          <div class="faq-question">
-            <span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span>
-            <span>＋</span>
-          </div>
-<div class="faq-answer" style="white-space:pre-wrap;">${escapeHTML(f.a)}</div>
-        </div>`).join("");
-    }
+let currentFaqFilter = "すべて";
+
+function setFaqFilter(filter, btn) {
+  currentFaqFilter = filter;
+  document.querySelectorAll("#faqTab .filter-bar button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderFaq();
+}
+
+function renderFaq() {
+  const filtered = currentFaqFilter === "すべて"
+    ? data.faqs
+    : data.faqs.filter(f => f.category === currentFaqFilter);
+  document.getElementById("faqList").innerHTML = filtered.map(f => `
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">
+        <span><span class="badge badge-info">${escapeHTML(f.category)}</span> ${escapeHTML(f.q)}</span>
+        <span>＋</span>
+      </div>
+      <div class="faq-answer" style="white-space:pre-wrap;">${escapeHTML(f.a)}</div>
+    </div>`).join("");
+}
  
     // ============================================================
     // メンバー
