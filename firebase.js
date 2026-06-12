@@ -1,6 +1,7 @@
 // ============================================================
-// firebase.js  ―  大改造版
-// 表示名管理（usersコレクション）・参加キャンセル・全機能対応
+// firebase.js
+// 表示名管理・掲示板・スケジュール・メンバー・FAQ・設定・バックアップ対応
+// 最終更新：2026年6月
 // ============================================================
 
 import { initializeApp }
@@ -811,5 +812,20 @@ backup.boardPosts = boardPosts;
   } catch(err) {
     console.error("バックアップ失敗:", err);
     alert("バックアップに失敗しました。");
+  }
+};
+window.firebaseDeleteReply = async function(postIndex, replyIndex) {
+  const docId = boardIdMap[postIndex];
+  if (!docId) return;
+  try {
+    const rSnap = await getDocs(
+      query(collection(db, "boardPosts", docId, "replies"), orderBy("created", "asc"))
+    );
+    const replyDoc = rSnap.docs[replyIndex];
+    if (!replyDoc) return;
+    await deleteDoc(doc(db, "boardPosts", docId, "replies", replyDoc.id));
+    console.log("返信削除OK");
+  } catch(err) {
+    console.error("返信削除失敗:", err);
   }
 };
