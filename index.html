@@ -1661,19 +1661,26 @@ function loginAdmin() {
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .slice(0, 5);
-  document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
+document.getElementById("sideEvents").innerHTML = upcoming.map(s => {
     const startDate = new Date(s.date + "T00:00:00");
     const endDate   = s.endDate ? new Date(s.endDate + "T00:00:00") : startDate;
     const diffStart = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
     const diffEnd   = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+    const startMonth = startDate.getMonth() + 1;
+    const startDay   = startDate.getDate();
+    const endMonth   = endDate.getMonth() + 1;
+    const endDay     = endDate.getDate();
     let label = "";
-    if (diffStart > 0) {
-      label = `🔵 あと${diffStart}日から開始`;
-    } else if (diffEnd === 0) {
-      label = `🔴 今日まで！`;
-    } else if (diffEnd > 0) {
-      label = `🟢 受付中（あと${diffEnd}日）`;
-    }
+const hasRange = s.endDate && s.endDate !== s.date;
+if (diffStart > 0) {
+  label = diffStart <= 3
+    ? `🔴 まもなく！${startMonth}/${startDay}${hasRange ? `〜${endMonth}/${endDay}` : ''}`
+    : `🔵 ${startMonth}/${startDay}${hasRange ? `〜${endMonth}/${endDay}` : ''}`;
+} else if (diffEnd === 0) {
+  label = `🔴 本日まで！`;
+} else if (diffEnd > 0) {
+  label = `🟢 〜${endMonth}/${endDay}まで`;
+}
     const dateStr = s.endDate
       ? `${escapeHTML(s.date)} 〜 ${escapeHTML(s.endDate)}`
       : escapeHTML(s.date);
