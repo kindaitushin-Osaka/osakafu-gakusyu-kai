@@ -1258,7 +1258,15 @@ function likeReply(postIndex, replyIndex) {
       if (typeof window.firebaseDeleteBoardPost === "function") window.firebaseDeleteBoardPost(index);
       data.boardPosts.splice(index, 1);
       saveData();
-    }
+}
+    function deleteReply(postIndex, replyIndex) {
+  if (!confirm("この返信を削除しますか？")) return;
+  data.boardPosts[postIndex].replies.splice(replyIndex, 1);
+  saveData();
+  if (typeof window.firebaseDeleteReply === "function") {
+    window.firebaseDeleteReply(postIndex, replyIndex);
+  }
+}
  
     function resolveDisplayName(authorEmail, authorFallback) {
       if (!authorEmail) return authorFallback || "匿名";
@@ -1306,11 +1314,12 @@ function likeReply(postIndex, replyIndex) {
               const rCreated = typeof r === 'object' && r.created ? r.created : (typeof r === 'object' && r.createdAt ? r.createdAt : '');
               const rLikes   = typeof r === 'object' ? (r.likes || 0) : 0;
               const alreadyLiked = localStorage.getItem(`liked_reply_${p._index}_${rIdx}`);              
-              return `<div class="reply-item">
-                <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${escapeHTML(rText)}
-                ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
-              <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
-              </div>`;
+          return `<div class="reply-item">
+          <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${escapeHTML(rText)}
+          ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
+          <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
+          ${isAdmin ? `<button class="btn btn-danger btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="deleteReply(${p._index}, ${rIdx})">🗑️ 削除</button>` : ''}
+          </div>`;
             }).join("")}
             <div class="reply-input-row" style="flex-direction:column;gap:8px;">
              <textarea id="replyInput_${p._index}" placeholder="返信を入力...（Shift+Enterで改行）" style="min-height:60px;font-size:13px;border-radius:8px;border:1px solid #cfd8e3;padding:8px;width:100%;resize:vertical;"></textarea>
