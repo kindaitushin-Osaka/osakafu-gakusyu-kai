@@ -1315,7 +1315,7 @@ function likeReply(postIndex, replyIndex) {
               const rLikes   = typeof r === 'object' ? (r.likes || 0) : 0;
               const alreadyLiked = localStorage.getItem(`liked_reply_${p._index}_${rIdx}`);              
           return `<div class="reply-item">
-          <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${escapeHTML(rText)}
+        <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${autoLink(escapeHTML(rText))}
           ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
           <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
           ${isAdmin ? `<button class="btn btn-danger btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="deleteReply(${p._index}, ${rIdx})">🗑️ 削除</button>` : ''}
