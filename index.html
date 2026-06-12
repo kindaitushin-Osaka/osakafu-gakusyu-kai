@@ -1747,8 +1747,8 @@ if (diffStart > 0) {
           </div>
         </div>`).join("");
  
-      document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s, i) => `
-        <div class="sidebar-item"><strong>${escapeHTML(s.date)}</strong><br>${escapeHTML(s.title)}
+document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s, i) => `
+  <div class="sidebar-item"><strong>${escapeHTML(s.date)}${s.endDate ? ` 〜 ${escapeHTML(s.endDate)}` : ''}</strong><br>${escapeHTML(s.title)}
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-light btn-small" onclick="editSchedule(${i})">編集</button>
             <button class="btn btn-danger btn-small" onclick="deleteSchedule(${i})">削除</button>
