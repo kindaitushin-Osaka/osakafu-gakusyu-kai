@@ -328,7 +328,7 @@
               <div class="form-group"><label>投稿者名</label><input id="boardName" placeholder="自動入力されます" readonly style="background:#f3f6f9;color:#6b7280;" /></div>
             </div>
             <div class="form-group inline"><input type="checkbox" id="boardAnon"><span>匿名で投稿する</span></div>
-            <div class="form-group"><label>タイトル</label><input id="boardTitle" placeholder="例：レポートの書き方が不安です" /></div>
+        <div class="form-group"><label>タイトル</label><input id="boardTitle" placeholder="例：レポートの書き方が不安です" onkeydown="return event.key !== 'Enter';" /></div>
             <div class="form-group"><label>内容</label><textarea id="boardBody" placeholder="質問・相談・情報共有などを入力してください"></textarea></div>
             <button class="btn" onclick="addBoardPost()">投稿する</button>
           </div>
@@ -419,8 +419,7 @@
                 <option value="📝">📝 履修生</option>
               </select>
             </div>
-            <div class="form-group"><label>一言コメント（50文字以内）</label><input id="memberComment" placeholder="例：レポート頑張っています" maxlength="50" /></div>
-            <div class="form-group">
+<div class="form-group"><label>一言コメント（50文字以内）</label><textarea id="memberComment" placeholder="例：レポート頑張っています" maxlength="50" style="min-height:70px;resize:vertical;"></textarea></div>
               <label>編集用パスワード（必須・4文字以上）</label>
               <input id="memberPassword" type="password" placeholder="自分だけが知るパスワードを設定してください" />
               <p style="font-size:12px;color:var(--gray);margin-top:4px;">⚠️ 忘れた場合は管理者に削除を依頼し、登録し直してください</p>
@@ -1313,13 +1312,15 @@ function likeReply(postIndex, replyIndex) {
               <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
               </div>`;
             }).join("")}
-            <div class="reply-input-row">
-              <input id="replyInput_${p._index}" type="text" placeholder="返信を入力...">
-              <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;">
-                <input type="checkbox" id="replyAnon_${p._index}" style="width:auto;">匿名
-              </label>
-              <button class="btn btn-small" onclick="addReply(${p._index})">返信</button>
-            </div>
+            <div class="reply-input-row" style="flex-direction:column;gap:8px;">
+             <textarea id="replyInput_${p._index}" placeholder="返信を入力...（Shift+Enterで改行）" style="min-height:60px;font-size:13px;border-radius:8px;border:1px solid #cfd8e3;padding:8px;width:100%;resize:vertical;"></textarea>
+             <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
+             <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;">
+             <input type="checkbox" id="replyAnon_${p._index}" style="width:auto;">匿名
+           </label>
+             <button class="btn btn-small" onclick="addReply(${p._index})">返信</button>
+          </div>
+          </div>
           </div>
         </div>`
       }).join("") || '<div class="muted">該当する投稿はありません。</div>';
@@ -1498,23 +1499,34 @@ function renderFaq() {
       saveData();
     }
  
+let editMemberIndex = -1;
+
 function editMember(index) {
-  const m       = data.members[index];
+  const m = data.members[index];
   const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
   if (!isAdmin) {
     const inputPass = prompt("編集用パスワードを入力してください");
     if (inputPass === null) return;
     if (inputPass !== m.password) return alert("パスワードが違います");
   }
-  const newGrade = prompt("学年を入力してください\n（1年／2年／3年／4年／履修生／卒業生）", m.grade || "");
-  if (newGrade === null) return;
-  const newSubject = prompt("得意科目を入力してください", m.subject || "");
-  if (newSubject === null) return;
-  const newStyle = prompt("勉強スタイルを入力してください\n（朝型／夜型／週末集中）", m.style || "");
-  if (newStyle === null) return;
-  let newComment = prompt("コメントを編集してください（50文字以内）", m.comment || "");
-  if (newComment === null) return;
-  newComment = newComment.slice(0, 50);
+  editMemberIndex = index;
+  // 現在の値をフォームにセット
+  document.getElementById("editMemberGrade").value   = m.grade   || "1年";
+  document.getElementById("editMemberSubject").value = m.subject || "";
+  document.getElementById("editMemberStyle").value   = m.style   || "朝型";
+  document.getElementById("editMemberComment").value = m.comment || "";
+  // モーダルを表示
+  document.getElementById("editMemberOverlay").style.display = "flex";
+}
+
+function saveEditMember() {
+  const index = editMemberIndex;
+  if (index < 0) return;
+  const m = data.members[index];
+  const newGrade   = document.getElementById("editMemberGrade").value;
+  const newSubject = document.getElementById("editMemberSubject").value.trim();
+  const newStyle   = document.getElementById("editMemberStyle").value;
+  const newComment = document.getElementById("editMemberComment").value.slice(0, 50);
   m.grade   = newGrade;
   m.subject = newSubject;
   m.style   = newStyle;
@@ -1528,6 +1540,12 @@ function editMember(index) {
     });
   }
   saveData();
+  closeEditMemberOverlay();
+}
+
+function closeEditMemberOverlay() {
+  document.getElementById("editMemberOverlay").style.display = "none";
+  editMemberIndex = -1;
 }
  
     function deleteMember(index) {
@@ -1560,7 +1578,7 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
       <div class="muted">得意科目：${escapeHTML(m.subject || "未入力")}</div>
       <div class="muted">勉強スタイル：${escapeHTML(m.style)}</div>
       <div class="muted">🎓 学年：${escapeHTML(m.grade || "未設定")}</div>
-      <p style="margin-top:8px;">${escapeHTML(m.comment || "よろしくお願いします。")}</p>
+  <p style="margin-top:8px;white-space:pre-wrap;">${escapeHTML(m.comment || "よろしくお願いします。")}</p>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button class="btn btn-light btn-small" onclick="editMember(${index})">✏️ 編集</button>
         ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteMember(${index})">削除</button>` : ""}
@@ -1908,5 +1926,42 @@ document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
   </script>
  
   <script type="module" src="./firebase.js"></script>
+  <!-- メンバー編集モーダル -->
+<div id="editMemberOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ メンバー情報の編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>学年</label>
+      <select id="editMemberGrade">
+        <option value="1年">1年</option>
+        <option value="2年">2年</option>
+        <option value="3年">3年</option>
+        <option value="4年">4年</option>
+        <option value="履修生">履修生</option>
+        <option value="卒業生">卒業生</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>得意科目</label>
+      <input id="editMemberSubject" placeholder="例：民法">
+    </div>
+    <div class="form-group">
+      <label>勉強スタイル</label>
+      <select id="editMemberStyle">
+        <option value="朝型">朝型</option>
+        <option value="夜型">夜型</option>
+        <option value="週末集中">週末集中</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>一言コメント（50文字以内）</label>
+      <textarea id="editMemberComment" maxlength="50" style="min-height:80px;resize:vertical;" placeholder="例：レポート頑張っています"></textarea>
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditMember()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditMemberOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
 </body>
 </html>
