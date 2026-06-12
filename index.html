@@ -385,7 +385,7 @@
         </div>
       </section>
  
-      <!-- メンバー -->
+<!-- メンバー -->
       <section id="membersTab" class="tab-content">
         <div class="card">
           <div class="section-head"><h2 class="section-title">👥 メンバー自己紹介</h2><span class="muted">学習仲間を見つける</span></div>
@@ -411,15 +411,17 @@
             </div>
             <div class="form-group"><label>アイコン</label>
               <select id="memberIcon">
-                <option value="😊">😊 smile</option>
-                <option value="📖">📖 司書</option>
-                <option value="⚖️">⚖️ 法学部</option>
-                <option value="🏠">🏠 建築学部</option>
-                <option value="💻">💻 短期大学部</option>
-                <option value="📝">📝 履修生</option>
+                <option value="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/icon_law.png">⚖️ 法学部</option>
+                <option value="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/icon_commerce.png">💻 商経短期大学部</option>
+                <option value="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/icon_arch.png">🏠 建築学部</option>
+                <option value="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/icon_lib.png">📖 司書</option>
+                <option value="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/icon_student.png">📝 履修生</option>
               </select>
             </div>
-<div class="form-group"><label>一言コメント（50文字以内）</label><textarea id="memberComment" placeholder="例：レポート頑張っています" maxlength="50" style="min-height:70px;resize:vertical;"></textarea></div>
+            <div class="form-group"><label>一言コメント（50文字以内）</label>
+              <textarea id="memberComment" placeholder="例：レポート頑張っています" maxlength="50" style="min-height:70px;resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
               <label>編集用パスワード（必須・4文字以上）</label>
               <input id="memberPassword" type="password" placeholder="自分だけが知るパスワードを設定してください" />
               <p style="font-size:12px;color:var(--gray);margin-top:4px;">⚠️ 忘れた場合は管理者に削除を依頼し、登録し直してください</p>
@@ -427,8 +429,8 @@
             <button class="btn" onclick="addMember()">自己紹介を登録する</button>
           </div>
           <div class="form-group" style="margin-bottom:16px;">
- <input id="memberSearch" oninput="renderMembers()" placeholder="🔍 名前で検索..." />
-        </div>  
+            <input id="memberSearch" oninput="renderMembers()" placeholder="🔍 名前で検索..." />
+          </div>
           <div id="memberList" class="grid grid-3"></div>
         </div>
       </section>
@@ -1582,7 +1584,10 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
       : m.name;
     return `
     <div class="member-card">
-      <div class="member-icon">${escapeHTML(m.icon || "👤")}</div>
+${m.icon && m.icon.startsWith("http")
+  ? `<img src="${escapeHTML(m.icon)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;">`
+  : `<div class="member-icon">${escapeHTML(m.icon || "👤")}</div>`
+}
       <div class="name">${escapeHTML(displayName)}</div>
       <div class="muted">得意科目：${escapeHTML(m.subject || "未入力")}</div>
       <div class="muted">勉強スタイル：${escapeHTML(m.style)}</div>
