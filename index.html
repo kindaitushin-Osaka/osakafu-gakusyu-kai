@@ -1951,7 +1951,17 @@ function editLink(i) {
   saveData();
   renderAdminLists();
 }
-
+function getLinkColor(category) {
+  const colors = {
+    "図書館・論文" : "e8f1fb",
+    "法律・判例"   : "fae8e8",
+    "大学関連"     : "e9f5ef",
+    "学習ツール"   : "fff3cd",
+    "参考書"       : "f3e8fb",
+    "その他"       : "f3f6f9"
+  };
+  return colors[category] || "f3f6f9";
+}
 function renderLinks() {
   const links = data.links || [];
   const filtered = currentLinkFilter === "すべて"
@@ -1960,7 +1970,7 @@ function renderLinks() {
   document.getElementById("linkList").innerHTML = filtered.length === 0
     ? '<div class="muted">リンクはまだ登録されていません。</div>'
     : filtered.map(l => `
-      <a class="link-card side-link" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer">
+<a class="link-card side-link" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer" style="background:#${getLinkColor(l.category)};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span class="badge badge-info">${escapeHTML(l.category)}</span>
           <span style="font-size:11px;color:var(--blue);">開く →</span>
