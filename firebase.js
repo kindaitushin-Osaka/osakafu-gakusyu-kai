@@ -146,8 +146,7 @@ async function loadAllDisplayNames() {
         window.usersMap[raw.email] = raw.displayName;
       }
     });
-    window.initLinkListener = initLinkListener;
-    console.log("表示名マップ読込OK:", Object.keys(window.usersMap).length, "件");
+      console.log("表示名マップ読込OK:", Object.keys(window.usersMap).length, "件");
     // 読込後に再描画
     if (window.renderBoard)   window.renderBoard();
     if (window.renderMembers) window.renderMembers();
@@ -837,6 +836,7 @@ if (window.data) {
 }
   }, (err) => console.error("リンクonSnapshotエラー:", err));
 }
+window.initLinkListener = initLinkListener;
 console.log("firebase.js 読込OK");
 window.downloadBackup = async function() {
   try {
