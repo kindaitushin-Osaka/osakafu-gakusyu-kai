@@ -160,7 +160,7 @@ async function loadAllDisplayNames() {
 // ============================================================
 
 window.startFirestoreListeners = function () {
-  loadAllDisplayNames();  // 全ユーザーの表示名を先に読み込む
+  loadAllDisplayNames();
   initBoardListener();
   initNoticeListener();
   initMemberListener();
@@ -169,6 +169,7 @@ window.startFirestoreListeners = function () {
   initSettingsListener();
   initOfficerListener();
   initRulesListener();
+  initLinkListener();
   console.log("Firestoreリスナー全開始");
 };
 
@@ -767,7 +768,70 @@ function initRulesListener() {
     }
   }, (err) => console.error("会則onSnapshotエラー:", err));
 }
+// ============================================================
+// 【リンク集】
+// ============================================================
+let linkIdMap = {};
 
+window.firebaseSaveLink = async function(link) {
+  try {
+    await addDoc(collection(db, "links"), {
+      category  : link.category || "その他",
+      name      : link.name     || "",
+      url       : link.url      || "",
+      desc      : link.desc     || "",
+      createdAt : serverTimestamp()
+    });
+    console.log("リンク保存OK");
+  } catch(err) {
+    console.error("リンク保存失敗:", err);
+  }
+};
+
+window.firebaseDeleteLink = async function(localIndex) {
+  const docId = linkIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await deleteDoc(doc(db, "links", docId));
+    console.log("リンク削除OK");
+  } catch(err) {
+    console.error("リンク削除失敗:", err);
+  }
+};
+
+window.firebaseUpdateLink = async function(localIndex, updatedData) {
+  const docId = linkIdMap[localIndex];
+  if (!docId) return;
+  try {
+    await updateDoc(doc(db, "links", docId), updatedData);
+    console.log("リンク更新OK");
+  } catch(err) {
+    console.error("リンク更新失敗:", err);
+  }
+};
+
+function initLinkListener() {
+  const q = query(collection(db, "links"), orderBy("createdAt", "asc"));
+  onSnapshot(q, (snapshot) => {
+    const links = [];
+    linkIdMap = {};
+    snapshot.docs.forEach((d, i) => {
+      const raw = d.data();
+      links.push({
+        category : raw.category || "その他",
+        name     : raw.name     || "",
+        url      : raw.url      || "",
+        desc     : raw.desc     || ""
+      });
+      linkIdMap[i] = d.id;
+    });
+    if (window.data) {
+      window.data.links = links;
+      if (window.renderLinks) window.renderLinks();
+      console.log(`リンクを同期: ${links.length}件`);
+    }
+  }, (err) => console.error("リンクonSnapshotエラー:", err));
+}
 console.log("firebase.js 読込OK");
 window.downloadBackup = async function() {
   try {
