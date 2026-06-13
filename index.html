@@ -291,6 +291,7 @@
         <button onclick="showTab('faq', this)">FAQ</button>
         <button onclick="showTab('members', this)">メンバー</button>
         <button onclick="showTab('timer', this)">タイマー</button>
+        <button onclick="showTab('links', this)">🔗 リンク集</button>
         <button onclick="showTab('rules', this)">会則・ルール</button>
         <button onclick="showTab('contact', this)">お問い合わせ</button>
         <button onclick="showTab('about', this)">ロゴマーク</button>
@@ -604,6 +605,22 @@
       tmrUpdateDisp();tmrUpdateRing();tmrExamUpdateDisp();tmrExamUpdateRing();tmrExamUpdateStats();
     </script>
   </div>
+  <!-- リンク集 -->
+<section id="linksTab" class="tab-content">
+  <div class="card">
+    <div class="section-head"><h2 class="section-title">🔗 リンク集</h2><span class="muted">学習に役立つサイト集</span></div>
+    <div class="filter-bar" id="linkFilterBar">
+      <button class="active" onclick="setLinkFilter('すべて', this)">すべて</button>
+      <button onclick="setLinkFilter('図書館・論文', this)">図書館・論文</button>
+      <button onclick="setLinkFilter('法律・判例', this)">法律・判例</button>
+      <button onclick="setLinkFilter('大学関連', this)">大学関連</button>
+      <button onclick="setLinkFilter('学習ツール', this)">学習ツール</button>
+      <button onclick="setLinkFilter('参考書', this)">参考書</button>
+      <button onclick="setLinkFilter('その他', this)">その他</button>
+    </div>
+    <div id="linkList" class="grid grid-2"></div>
+  </div>
+</section>
 </section>
       <!-- 会則・ルール -->
       <section id="rulesTab" class="tab-content">
@@ -738,6 +755,26 @@
               <button class="btn" onclick="saveRules()">会則・ルールを保存</button>
             </div>
             <div class="card">
+             <div class="card">
+  <h3>リンク集追加</h3>
+  <div class="form-row">
+    <div class="form-group"><label>カテゴリ</label>
+      <select id="adminLinkCategory">
+        <option>図書館・論文</option>
+        <option>法律・判例</option>
+        <option>大学関連</option>
+        <option>学習ツール</option>
+        <option>参考書</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="form-group"><label>サイト名</label><input id="adminLinkName" placeholder="例：国立国会図書館"></div>
+  </div>
+  <div class="form-group"><label>URL</label><input id="adminLinkUrl" placeholder="https://..."></div>
+  <div class="form-group"><label>説明文</label><input id="adminLinkDesc" placeholder="例：論文・資料の検索に役立ちます"></div>
+  <button class="btn" onclick="addLink()">リンクを追加</button>
+  <div id="adminLinkList" class="grid" style="margin-top:14px;"></div>
+</div> 
               <h3>資料・連絡先設定</h3>
               <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">【大学事務局】</p>
               <div class="form-group"><label>DriveフォルダURL</label><input id="adminDriveUrl"></div>
@@ -1774,7 +1811,16 @@ document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
     </div>
   </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
     }
- 
+ const links = data.links || [];
+document.getElementById("adminLinkList").innerHTML = links.map((l, i) => `
+  <div class="sidebar-item">
+    <strong>${escapeHTML(l.category)}</strong>　${escapeHTML(l.name)}<br>
+    <span style="font-size:12px;color:var(--gray);">${escapeHTML(l.url)}</span>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+      <button class="btn btn-light btn-small" onclick="editLink(${i})">編集</button>
+      <button class="btn btn-danger btn-small" onclick="deleteLink(${i})">削除</button>
+    </div>
+  </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
     function saveSettings() {
       data.settings.driveUrl       = document.getElementById("adminDriveUrl").value.trim()       || "#";
       data.settings.driveDesc      = document.getElementById("adminDriveDesc").value.trim();
@@ -1851,7 +1897,77 @@ document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
       document.getElementById("adminCircleChatLabel").value = data.settings.circleChatLabel || "";
       document.getElementById("adminRulesText").value       = data.rulesText || "";
     }
- 
+ // ============================================================
+// リンク集
+// ============================================================
+let currentLinkFilter = "すべて";
+
+function setLinkFilter(filter, btn) {
+  currentLinkFilter = filter;
+  document.querySelectorAll("#linkFilterBar button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderLinks();
+}
+
+function addLink() {
+  const category = document.getElementById("adminLinkCategory").value;
+  const name     = document.getElementById("adminLinkName").value.trim();
+  const url      = document.getElementById("adminLinkUrl").value.trim();
+  const desc     = document.getElementById("adminLinkDesc").value.trim();
+  if (!name || !url) return alert("サイト名とURLを入力してください");
+  const link = { category, name, url, desc };
+  if (!data.links) data.links = [];
+  data.links.push(link);
+  if (typeof window.firebaseSaveLink === "function") window.firebaseSaveLink(link);
+  document.getElementById("adminLinkName").value = "";
+  document.getElementById("adminLinkUrl").value  = "";
+  document.getElementById("adminLinkDesc").value = "";
+  saveData();
+  renderAdminLists();
+}
+
+function deleteLink(i) {
+  if (!confirm("このリンクを削除しますか？")) return;
+  if (typeof window.firebaseDeleteLink === "function") window.firebaseDeleteLink(i);
+  data.links.splice(i, 1);
+  saveData();
+  renderAdminLists();
+}
+
+function editLink(i) {
+  const l = data.links[i];
+  const newName = prompt("サイト名を編集", l.name);
+  if (newName === null) return;
+  const newUrl  = prompt("URLを編集", l.url);
+  if (newUrl === null) return;
+  const newDesc = prompt("説明文を編集", l.desc);
+  if (newDesc === null) return;
+  l.name = newName;
+  l.url  = newUrl;
+  l.desc = newDesc;
+  if (typeof window.firebaseUpdateLink === "function") window.firebaseUpdateLink(i, { name: newName, url: newUrl, desc: newDesc });
+  saveData();
+  renderAdminLists();
+}
+
+function renderLinks() {
+  const links = data.links || [];
+  const filtered = currentLinkFilter === "すべて"
+    ? links
+    : links.filter(l => l.category === currentLinkFilter);
+  document.getElementById("linkList").innerHTML = filtered.length === 0
+    ? '<div class="muted">リンクはまだ登録されていません。</div>'
+    : filtered.map(l => `
+      <a class="link-card side-link" href="${escapeHTML(l.url)}" target="_blank" rel="noopener noreferrer">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span class="badge badge-info">${escapeHTML(l.category)}</span>
+          <span style="font-size:11px;color:var(--blue);">開く →</span>
+        </div>
+        <strong style="font-size:15px;">🔗 ${escapeHTML(l.name)}</strong>
+        ${l.desc ? `<p style="font-size:12px;color:var(--gray);margin-top:4px;">${escapeHTML(l.desc)}</p>` : ''}
+      </a>`
+    ).join("");
+}
     // ============================================================
     // 会則・役員メッセージ
     // ============================================================
@@ -1925,7 +2041,7 @@ document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
     // ============================================================
     function renderAll() {
       renderNotices(); renderBoard(); renderSchedules(); renderMaterials();
-      renderFaq(); renderMembers(); renderContact(); renderSideEvents(); renderRules();
+renderFaq(); renderMembers(); renderContact(); renderSideEvents(); renderRules(); renderLinks();
     }
  
     window.data              = data;
