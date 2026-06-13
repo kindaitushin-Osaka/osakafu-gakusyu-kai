@@ -1801,7 +1801,7 @@ document.getElementById("adminScheduleList").innerHTML = data.schedules.map((s, 
           </div>
         </div>`).join("");
  
- const officers = data.officers || [];
+const officers = data.officers || [];
 document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
   <div class="sidebar-item">
     <strong>${escapeHTML(o.role)}</strong>　${escapeHTML(o.name)}
@@ -1811,8 +1811,8 @@ document.getElementById("adminOfficerList").innerHTML = officers.map((o, i) => `
       <button class="btn btn-danger btn-small" onclick="deleteOfficer(${i})">削除</button>
     </div>
   </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
-    }
- const links = data.links || [];
+
+const links = data.links || [];
 document.getElementById("adminLinkList").innerHTML = links.map((l, i) => `
   <div class="sidebar-item">
     <strong>${escapeHTML(l.category)}</strong>　${escapeHTML(l.name)}<br>
@@ -1822,6 +1822,7 @@ document.getElementById("adminLinkList").innerHTML = links.map((l, i) => `
       <button class="btn btn-danger btn-small" onclick="deleteLink(${i})">削除</button>
     </div>
   </div>`).join("") || '<div class="muted" style="font-size:13px;">まだ登録されていません</div>';
+    }
     function saveSettings() {
       data.settings.driveUrl       = document.getElementById("adminDriveUrl").value.trim()       || "#";
       data.settings.driveDesc      = document.getElementById("adminDriveDesc").value.trim();
