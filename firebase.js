@@ -825,11 +825,15 @@ function initLinkListener() {
       });
       linkIdMap[i] = d.id;
     });
-    if (window.data) {
-      window.data.links = links;
-      if (window.renderLinks) window.renderLinks();
-      console.log(`リンクを同期: ${links.length}件`);
-    }
+if (window.data) {
+  window.data.links = links;
+  if (window.renderLinks) window.renderLinks();
+  const adminPanel = document.getElementById("adminPanel");
+  if (adminPanel && adminPanel.style.display === "grid") {
+    if (window.renderAdminLists) window.renderAdminLists();
+  }
+  console.log(`リンクを同期： ${links.length}件`);
+}
   }, (err) => console.error("リンクonSnapshotエラー:", err));
 }
 console.log("firebase.js 読込OK");
@@ -893,3 +897,4 @@ window.firebaseDeleteReply = async function(postIndex, replyIndex) {
     console.error("返信削除失敗:", err);
   }
 };
+
