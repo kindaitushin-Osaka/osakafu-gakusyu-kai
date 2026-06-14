@@ -196,6 +196,7 @@ window.firebaseSaveBoardPost = async function (post) {
       body        : post.body,
       author      : post.author,
       authorEmail : post.authorEmail || "",
+      displayName : post.author || "匿名",
       likes       : 0,
       solved      : false,
       stamps      : post.stamps,
@@ -247,9 +248,9 @@ window.firebaseAddReply = async function (localIndex, reply) {
       collection(db, "boardPosts", docId, "replies"),
       {
         text        : reply.text,
-        author      : reply.author      || "匿名",
-        authorEmail : reply.authorEmail || "",
-        created     : serverTimestamp()
+  authorEmail : reply.authorEmail || "",
+  displayName : reply.author      || "匿名",
+  created     : serverTimestamp()
       }
     );
     console.log("返信保存OK");
@@ -301,7 +302,7 @@ async function initBoardListener() {
         );
 replies = rSnap.docs.map(r => ({
   text        : r.data().text,
-  author      : r.data().author      || "匿名",
+  author      : r.data().displayName || r.data().author || "匿名",
   authorEmail : r.data().authorEmail || "",
   created     : formatDateTime(r.data().created),
   likes       : r.data().likes       || 0
@@ -311,8 +312,8 @@ replies = rSnap.docs.map(r => ({
         category    : raw.category    || "質問",
         title       : raw.title       || "",
         body        : raw.body        || "",
-        author      : raw.author      || "匿名",
-        authorEmail : raw.authorEmail || "",
+        author      : raw.displayName || raw.author || "匿名",
+authorEmail : raw.authorEmail || "",
         likes       : raw.likes       || 0,
         solved      : raw.solved      || false,
         stamps      : raw.stamps      || { "❤":0,"👍":0,"😊":0,"🎉":0,"💪":0 },
@@ -898,4 +899,3 @@ window.firebaseDeleteReply = async function(postIndex, replyIndex) {
     console.error("返信削除失敗:", err);
   }
 };
-
