@@ -967,7 +967,45 @@ window.restoreToFirestore = async function(backup) {
       });
       console.log("会則復元OK");
     }
+// 掲示板返信
+    if (backup.boardPosts) {
+      for (const post of backup.boardPosts) {
+        if (post.replies && post.replies.length > 0) {
+          // 投稿のdocIdを取得
+          const boardSnap = await getDocs(collection(db, "boardPosts"));
+          const matchDoc = boardSnap.docs.find(d => 
+            d.data().title === post.title && d.data().body === post.body
+          );
+          if (matchDoc) {
+            for (const reply of post.replies) {
+              await addDoc(collection(db, "boardPosts", matchDoc.id, "replies"), {
+                text        : reply.text        || "",
+                author      : reply.author      || "匿名",
+                authorEmail : reply.authorEmail || "",
+                displayName : reply.displayName || reply.author || "匿名",
+                likes       : reply.likes       || 0,
+                created     : serverTimestamp()
+              });
+            }
+          }
+        }
+      }
+      console.log("返信復元OK");
+    }
 
+    // users
+    if (backup.users) {
+      const snap = await getDocs(collection(db, "users"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "users", d.id));
+      for (const u of backup.users) {
+        await setDoc(doc(db, "users", u.id), {
+          email       : u.email       || "",
+          displayName : u.displayName || "",
+          updatedAt   : serverTimestamp()
+        });
+      }
+      console.log("ユーザー復元OK");
+    }
     console.log("Firestore復元完了");
     return true;
   } catch(err) {
@@ -986,7 +1024,6 @@ const boardSnap = await getDocs(collection(db, "boardPosts"));
 const boardPosts = [];
 for (const boardDoc of boardSnap.docs) {
   const postData = { id: boardDoc.id, ...boardDoc.data() };
-  // サブコレクション（返信）も取得
   const repliesSnap = await getDocs(
     query(collection(db, "boardPosts", boardDoc.id, "replies"), orderBy("created", "asc"))
   );
@@ -994,6 +1031,10 @@ for (const boardDoc of boardSnap.docs) {
   boardPosts.push(postData);
 }
 backup.boardPosts = boardPosts;
+
+// users
+const usersSnap = await getDocs(collection(db, "users"));
+backup.users = usersSnap.docs.map(d => ({id: d.id, ...d.data()}));
     const scheduleSnap = await getDocs(collection(db, "schedules"));
     backup.schedules   = scheduleSnap.docs.map(d => ({id: d.id, ...d.data()}));
     const faqSnap      = await getDocs(collection(db, "faqs"));
