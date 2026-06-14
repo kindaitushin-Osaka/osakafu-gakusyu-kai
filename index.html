@@ -1441,20 +1441,46 @@ function likeReply(postIndex, replyIndex) {
       renderAdminLists();
     }
  
-    function editSchedule(i) {
-      const s = data.schedules[i];
-      const newTitle = prompt("タイトルを編集", s.title);
-      if (newTitle === null) return;
-      const newPlace = prompt("場所を編集", s.place);
-      if (newPlace === null) return;
-      s.title = newTitle;
-      s.place = newPlace;
-      saveData();
-      if (typeof window.firebaseUpdateSchedule === "function") {
-        window.firebaseUpdateSchedule(i, { title: newTitle, place: newPlace });
-      }
-      renderAdminLists();
-    }
+let editScheduleIndex = -1;
+
+function editSchedule(i) {
+  const s = data.schedules[i];
+  editScheduleIndex = i;
+  document.getElementById("editScheduleDate").value    = s.date    || "";
+  document.getElementById("editScheduleEndDate").value = s.endDate || "";
+  document.getElementById("editScheduleType").value    = s.type    || "勉強会";
+  document.getElementById("editScheduleTitle").value   = s.title   || "";
+  document.getElementById("editSchedulePlace").value   = s.place   || "";
+  document.getElementById("editScheduleOverlay").style.display = "flex";
+}
+
+function saveEditSchedule() {
+  const i = editScheduleIndex;
+  if (i < 0) return;
+  const s = data.schedules[i];
+  const newDate    = document.getElementById("editScheduleDate").value;
+  const newEndDate = document.getElementById("editScheduleEndDate").value;
+  const newType    = document.getElementById("editScheduleType").value;
+  const newTitle   = document.getElementById("editScheduleTitle").value.trim();
+  const newPlace   = document.getElementById("editSchedulePlace").value.trim();
+  if (!newDate || !newTitle) return alert("日付とタイトルを入力してください");
+  s.date    = newDate;
+  s.endDate = newEndDate;
+  s.type    = newType;
+  s.title   = newTitle;
+  s.place   = newPlace;
+  if (typeof window.firebaseUpdateSchedule === "function") {
+    window.firebaseUpdateSchedule(i, { date: newDate, endDate: newEndDate, type: newType, title: newTitle, place: newPlace });
+  }
+  saveData();
+  closeEditScheduleOverlay();
+  renderAdminLists();
+}
+
+function closeEditScheduleOverlay() {
+  document.getElementById("editScheduleOverlay").style.display = "none";
+  editScheduleIndex = -1;
+}
  
 function renderSchedules() {
   const sorted = [...data.schedules]
@@ -1782,21 +1808,75 @@ if (diffStart > 0) {
       saveData();
       renderAdminLists();
     }
- 
-    function editNotice(i) {
-      const n = data.notices[i];
-      const newTitle = prompt("タイトルを編集", n.title);
-      if (newTitle === null) return;
-      const newBody  = prompt("本文を編集", n.body);
-      if (newBody === null) return;
-      n.title = newTitle;
-      n.body  = newBody;
-      saveData();
-      if (typeof window.firebaseUpdateNotice === "function") {
-        window.firebaseUpdateNotice(i, { title: newTitle, body: newBody });
-      }
-      renderAdminLists();
-    }
+
+let editNoticeIndex = -1;
+
+function editNotice(i) {
+  const n = data.notices[i];
+  editNoticeIndex = i;
+  document.getElementById("editNoticeTitle").value   = n.title   || "";
+  document.getElementById("editNoticeBody").value    = n.body    || "";
+  document.getElementById("editNoticeType").value    = n.type    || "お知らせ";
+  document.getElementById("editNoticeFormUrl").value = n.formUrl || "";
+  document.getElementById("editNoticePinned").checked = n.pinned || false;
+  document.getElementById("editNoticeOverlay").style.display = "flex";
+}
+
+function saveEditNotice() {
+  const i = editNoticeIndex;
+  if (i < 0) return;
+  const n = data.notices[i];
+  const newTitle   = document.getElementById("editNoticeTitle").value.trim();
+  const newBody    = document.getElementById("editNoticeBody").value.trim();
+  const newType    = document.getElementById("editNoticeType").value;
+  const newFormUrl = document.getElementById("editNoticeFormUrl").value.trim();
+  const newPinned  = document.getElementById("editNoticePinned").checked;
+  if (!newTitle || !newBody) return alert("タイトルと本文を入力してください");
+  n.title   = newTitle;
+  n.body    = newBody;
+  n.type    = newType;
+  n.formUrl = newFormUrl;
+  n.pinned  = newPinned;
+  if (typeof window.firebaseUpdateNotice === "function") {
+    window.firebaseUpdateNotice(i, { title: newTitle, body: newBody, type: newType, formUrl: newFormUrl, pinned: newPinned });
+  }
+  saveData();
+  closeEditNoticeOverlay();
+  renderAdminLists();
+}
+
+function closeEditNoticeOverlay() {
+  document.getElementById("editNoticeOverlay").style.display = "none";
+  editNoticeIndex = -1;
+}
+
+function saveEditNotice() {
+  const i = editNoticeIndex;
+  if (i < 0) return;
+  const n = data.notices[i];
+  const newTitle   = document.getElementById("editNoticeTitle").value.trim();
+  const newBody    = document.getElementById("editNoticeBody").value.trim();
+  const newType    = document.getElementById("editNoticeType").value;
+  const newFormUrl = document.getElementById("editNoticeFormUrl").value.trim();
+  const newPinned  = document.getElementById("editNoticePinned").checked;
+  if (!newTitle || !newBody) return alert("タイトルと本文を入力してください");
+  n.title   = newTitle;
+  n.body    = newBody;
+  n.type    = newType;
+  n.formUrl = newFormUrl;
+  n.pinned  = newPinned;
+  if (typeof window.firebaseUpdateNotice === "function") {
+    window.firebaseUpdateNotice(i, { title: newTitle, body: newBody, type: newType, formUrl: newFormUrl, pinned: newPinned });
+  }
+  saveData();
+  closeEditNoticeOverlay();
+  renderAdminLists();
+}
+
+function closeEditNoticeOverlay() {
+  document.getElementById("editNoticeOverlay").style.display = "none";
+  editNoticeIndex = -1;
+}
  
     function renderAdminLists() {
       document.getElementById("adminNoticeList").innerHTML = data.notices.map((n, i) => `
@@ -1879,29 +1959,48 @@ document.getElementById("adminLinkList").innerHTML = links.map((l, i) => `
       saveData();
       renderAdminLists();
     }
- 
-    function editFaq(i) {
-      const f = data.faqs[i];
-      const newQ = prompt("質問を編集", f.q);
-      if (newQ === null) return;
-      const newA = prompt("回答を編集", f.a);
-      if (newA === null) return;
-      f.q = newQ;
-      f.a = newA;
-      saveData();
-      if (typeof window.firebaseUpdateFaq === "function") {
-        window.firebaseUpdateFaq(i, { q: newQ, a: newA });
-      }
-      renderAdminLists();
-    }
- 
+let editFaqIndex = -1;
+
+function editFaq(i) {
+  const f = data.faqs[i];
+  editFaqIndex = i;
+  document.getElementById("editFaqCategory").value = f.category || "履修";
+  document.getElementById("editFaqQuestion").value = f.q        || "";
+  document.getElementById("editFaqAnswer").value   = f.a        || "";
+  document.getElementById("editFaqOverlay").style.display = "flex";
+}
+
+function saveEditFaq() {
+  const i = editFaqIndex;
+  if (i < 0) return;
+  const f = data.faqs[i];
+  const newCategory = document.getElementById("editFaqCategory").value;
+  const newQ        = document.getElementById("editFaqQuestion").value.trim();
+  const newA        = document.getElementById("editFaqAnswer").value.trim();
+  if (!newQ || !newA) return alert("質問と回答を入力してください");
+  f.category = newCategory;
+  f.q        = newQ;
+  f.a        = newA;
+  if (typeof window.firebaseUpdateFaq === "function") {
+    window.firebaseUpdateFaq(i, { category: newCategory, q: newQ, a: newA });
+  }
+  saveData();
+  closeEditFaqOverlay();
+  renderAdminLists();
+}
+
+function closeEditFaqOverlay() {
+  document.getElementById("editFaqOverlay").style.display = "none";
+  editFaqIndex = -1;
+}
+
     function addFaq() {
       const category = document.getElementById("adminFaqCategory").value;
       const q = document.getElementById("adminFaqQuestion").value.trim();
       const a = document.getElementById("adminFaqAnswer").value.trim();
       if (!q || !a) return alert("質問と回答を入力してください");
       const faq = { category, q, a };
-      data.faqs.push(faq);
+      data.faqs.push(faq);/*  */
       if (typeof window.firebaseSaveFaq === "function") window.firebaseSaveFaq(faq);
       document.getElementById("adminFaqQuestion").value = "";
       document.getElementById("adminFaqAnswer").value   = "";
@@ -1958,20 +2057,42 @@ function deleteLink(i) {
   renderAdminLists();
 }
 
+let editLinkIndex = -1;
+
 function editLink(i) {
   const l = data.links[i];
-  const newName = prompt("サイト名を編集", l.name);
-  if (newName === null) return;
-  const newUrl  = prompt("URLを編集", l.url);
-  if (newUrl === null) return;
-  const newDesc = prompt("説明文を編集", l.desc);
-  if (newDesc === null) return;
-  l.name = newName;
-  l.url  = newUrl;
-  l.desc = newDesc;
-  if (typeof window.firebaseUpdateLink === "function") window.firebaseUpdateLink(i, { name: newName, url: newUrl, desc: newDesc });
+  editLinkIndex = i;
+  document.getElementById("editLinkCategory").value = l.category || "その他";
+  document.getElementById("editLinkName").value     = l.name     || "";
+  document.getElementById("editLinkUrl").value      = l.url      || "";
+  document.getElementById("editLinkDesc").value     = l.desc     || "";
+  document.getElementById("editLinkOverlay").style.display = "flex";
+}
+
+function saveEditLink() {
+  const i = editLinkIndex;
+  if (i < 0) return;
+  const l = data.links[i];
+  const newCategory = document.getElementById("editLinkCategory").value;
+  const newName     = document.getElementById("editLinkName").value.trim();
+  const newUrl      = document.getElementById("editLinkUrl").value.trim();
+  const newDesc     = document.getElementById("editLinkDesc").value.trim();
+  if (!newName || !newUrl) return alert("サイト名とURLを入力してください");
+  l.category = newCategory;
+  l.name     = newName;
+  l.url      = newUrl;
+  l.desc     = newDesc;
+  if (typeof window.firebaseUpdateLink === "function") {
+    window.firebaseUpdateLink(i, { category: newCategory, name: newName, url: newUrl, desc: newDesc });
+  }
   saveData();
+  closeEditLinkOverlay();
   renderAdminLists();
+}
+
+function closeEditLinkOverlay() {
+  document.getElementById("editLinkOverlay").style.display = "none";
+  editLinkIndex = -1;
 }
 function getLinkColor(category) {
   const colors = {
@@ -2150,6 +2271,142 @@ renderFaq(); renderMembers(); renderContact(); renderSideEvents(); renderRules()
     <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditMember()">保存する</button>
     <p style="margin-top:12px;font-size:12px;">
       <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditMemberOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
+<!-- お知らせ編集モーダル -->
+<div id="editNoticeOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ お知らせの編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>タイトル</label>
+      <input id="editNoticeTitle" placeholder="タイトルを入力">
+    </div>
+    <div class="form-group">
+      <label>本文</label>
+      <textarea id="editNoticeBody" style="min-height:120px;resize:vertical;"></textarea>
+    </div>
+    <div class="form-group">
+      <label>種別</label>
+      <select id="editNoticeType">
+        <option>重要</option>
+        <option>イベント</option>
+        <option>お知らせ</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>GoogleフォームURL（イベント用）</label>
+      <input id="editNoticeFormUrl" placeholder="https://forms.gle/...">
+    </div>
+    <div class="form-group inline">
+      <input type="checkbox" id="editNoticePinned">
+      <span>ピン留め</span>
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditNotice()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditNoticeOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
+<!-- FAQ編集モーダル -->
+<div id="editFaqOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ FAQの編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>カテゴリ</label>
+      <select id="editFaqCategory">
+        <option>履修</option>
+        <option>試験</option>
+        <option>レポート</option>
+        <option>スクーリング</option>
+        <option>オンデマンド</option>
+        <option>学習方法</option>
+        <option>サークル</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>質問</label>
+      <input id="editFaqQuestion" placeholder="質問を入力">
+    </div>
+    <div class="form-group">
+      <label>回答</label>
+      <textarea id="editFaqAnswer" style="min-height:120px;resize:vertical;"></textarea>
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditFaq()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditFaqOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
+<!-- スケジュール編集モーダル -->
+<div id="editScheduleOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ スケジュールの編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>開始日</label>
+      <input type="date" id="editScheduleDate">
+    </div>
+    <div class="form-group">
+      <label>終了日（任意）</label>
+      <input type="date" id="editScheduleEndDate">
+    </div>
+    <div class="form-group">
+      <label>種別</label>
+      <select id="editScheduleType">
+        <option>勉強会</option>
+        <option>試験</option>
+        <option>交流会</option>
+        <option>卒ゼミ</option>
+        <option>スクーリング</option>
+        <option>オンデマンド</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>タイトル</label>
+      <input id="editScheduleTitle" placeholder="タイトルを入力">
+    </div>
+    <div class="form-group">
+      <label>場所</label>
+      <input id="editSchedulePlace" placeholder="例：オンライン、大阪市内">
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditSchedule()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditScheduleOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
+<!-- リンク集編集モーダル -->
+<div id="editLinkOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ リンクの編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>カテゴリ</label>
+      <select id="editLinkCategory">
+        <option>図書館・論文</option>
+        <option>法律・判例</option>
+        <option>大学関連</option>
+        <option>学習ツール</option>
+        <option>参考書</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>サイト名</label>
+      <input id="editLinkName" placeholder="例：国立国会図書館">
+    </div>
+    <div class="form-group">
+      <label>URL</label>
+      <input id="editLinkUrl" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>説明文</label>
+      <textarea id="editLinkDesc" style="min-height:80px;resize:vertical;"></textarea>
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditLink()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditLinkOverlay()">キャンセル</span>
     </p>
   </div>
 </div>
