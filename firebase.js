@@ -52,7 +52,15 @@ getDoc(doc(db, "settings", "admin")).then(snap => {
     console.log("管理者パスワード取得OK");
   }
 }).catch(err => console.error("管理者パスワード取得失敗:", err));
+// ── 合言葉（Firestoreから取得）───────────────────
+window.sitePassword = "takoyaki"; // Firestore取得前の仮
 
+getDoc(doc(db, "settings", "admin")).then(snap => {
+  if (snap.exists() && snap.data().sitePassword) {
+    window.sitePassword = snap.data().sitePassword;
+    console.log("合言葉取得OK");
+  }
+}).catch(err => console.error("合言葉取得失敗:", err));
 // ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
 let noticeIdMap   = {};
@@ -838,6 +846,135 @@ if (window.data) {
   }, (err) => console.error("リンクonSnapshotエラー:", err));
 }
 window.initLinkListener = initLinkListener;
+// ============================================================
+// 【Firestore復元】
+// ============================================================
+window.restoreToFirestore = async function(backup) {
+  try {
+    // お知らせ
+    if (backup.notices) {
+      const snap = await getDocs(collection(db, "notices"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "notices", d.id));
+      for (const n of backup.notices) {
+        await addDoc(collection(db, "notices"), {
+          title    : n.title    || "",
+          body     : n.body     || "",
+          type     : n.type     || "お知らせ",
+          pinned   : n.pinned   || false,
+          formUrl  : n.formUrl  || "",
+          created  : n.created  || "",
+          createdAt: serverTimestamp()
+        });
+      }
+      console.log("お知らせ復元OK");
+    }
+
+    // スケジュール
+    if (backup.schedules) {
+      const snap = await getDocs(collection(db, "schedules"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "schedules", d.id));
+      for (const s of backup.schedules) {
+        await addDoc(collection(db, "schedules"), {
+          date        : s.date         || "",
+          endDate     : s.endDate      || "",
+          title       : s.title        || "",
+          place       : s.place        || "",
+          type        : s.type         || "勉強会",
+          participants: s.participants || 0,
+          createdAt   : serverTimestamp()
+        });
+      }
+      console.log("スケジュール復元OK");
+    }
+
+    // FAQ
+    if (backup.faqs) {
+      const snap = await getDocs(collection(db, "faqs"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "faqs", d.id));
+      for (const f of backup.faqs) {
+        await addDoc(collection(db, "faqs"), {
+          category  : f.category || "履修",
+          q         : f.q        || "",
+          a         : f.a        || "",
+          createdAt : serverTimestamp()
+        });
+      }
+      console.log("FAQ復元OK");
+    }
+
+    // メンバー
+    if (backup.members) {
+      const snap = await getDocs(collection(db, "members"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "members", d.id));
+      for (const m of backup.members) {
+        await addDoc(collection(db, "members"), {
+          name      : m.name     || "",
+          email     : m.email    || "",
+          icon      : m.icon     || "👤",
+          comment   : m.comment  || "",
+          subject   : m.subject  || "",
+          style     : m.style    || "",
+          grade     : m.grade    || "",
+          password  : m.password || "",
+          createdAt : serverTimestamp()
+        });
+      }
+      console.log("メンバー復元OK");
+    }
+
+    // 役員
+    if (backup.officers) {
+      const snap = await getDocs(collection(db, "officers"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "officers", d.id));
+      for (const o of backup.officers) {
+        await addDoc(collection(db, "officers"), {
+          role      : o.role    || "",
+          name      : o.name    || "",
+          message   : o.message || "",
+          createdAt : serverTimestamp()
+        });
+      }
+      console.log("役員復元OK");
+    }
+
+    // リンク集
+    if (backup.links) {
+      const snap = await getDocs(collection(db, "links"));
+      for (const d of snap.docs) await deleteDoc(doc(db, "links", d.id));
+      for (const l of backup.links) {
+        await addDoc(collection(db, "links"), {
+          category  : l.category || "その他",
+          name      : l.name     || "",
+          url       : l.url      || "",
+          desc      : l.desc     || "",
+          createdAt : serverTimestamp()
+        });
+      }
+      console.log("リンク集復元OK");
+    }
+
+    // 設定
+    if (backup.settings) {
+      await setDoc(doc(db, "settings", "main"), backup.settings);
+      console.log("設定復元OK");
+    }
+
+    // 会則
+    if (backup.rulesText) {
+      await setDoc(doc(db, "rules", "main"), {
+        text      : backup.rulesText,
+        updatedAt : serverTimestamp()
+      });
+      console.log("会則復元OK");
+    }
+
+    console.log("Firestore復元完了");
+    return true;
+  } catch(err) {
+    console.error("Firestore復元失敗:", err);
+    return false;
+  }
+};
 console.log("firebase.js 読込OK");
 window.downloadBackup = async function() {
   try {
