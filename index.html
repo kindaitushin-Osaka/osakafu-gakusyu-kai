@@ -347,8 +347,8 @@
           <div class="section-head"><h2 class="section-title">💬 掲示板</h2><span class="muted">カテゴリ検索対応</span></div>
           <div class="card" style="margin-bottom:16px;">
             <div class="form-row">
-              <div class="form-group"><label>カテゴリ</label><select id="boardCategory"><option>質問</option><option>相談</option><option>情報共有</option><option>雑談</option></select></div>
-              <div class="form-group"><label>投稿者名</label><input id="boardName" placeholder="自動入力されます" readonly style="background:#f3f6f9;color:#6b7280;" /></div>
+<div class="form-group"><label>カテゴリ</label><select id="boardCategory"><option>質問</option><option>相談</option><option>情報共有</option><option>雑談</option><option>卒業のご挨拶</option></select></div>
+<div class="form-group"><label>投稿者名</label><input id="boardName" placeholder="自動入力されます" readonly style="background:#f3f6f9;color:#6b7280;" /></div>
             </div>
             <div class="form-group inline"><input type="checkbox" id="boardAnon"><span>匿名で投稿する</span></div>
         <div class="form-group"><label>タイトル</label><input id="boardTitle" placeholder="例：レポートの書き方が不安です" onkeydown="return event.key !== 'Enter';" /></div>
@@ -361,6 +361,7 @@
             <button onclick="setBoardFilter('相談', this)">相談</button>
             <button onclick="setBoardFilter('情報共有', this)">情報共有</button>
             <button onclick="setBoardFilter('雑談', this)">雑談</button>
+            <button onclick="setBoardFilter('卒業生より', this)">卒業のご挨拶</button>
           </div>
           <div class="form-group"><input id="boardSearch" oninput="renderBoard()" placeholder="キーワード検索" /></div>
           <div id="boardList" class="grid"></div>
