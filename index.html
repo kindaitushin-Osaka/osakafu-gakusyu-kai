@@ -378,7 +378,7 @@
       <!-- 資料 -->
       <section id="materialsTab" class="tab-content">
         <div class="card">
-          <div class="section-head"><h2 class="section-title">📁 資料</h2><span class="muted">Google Driveと大学公式リンク</span></div>
+          <div class="section-head"><h2 class="section-title">📁 資料</h2><span class="muted">学習会共有資料</span></div>
           <div class="drive-hero">
             <div class="big">📂</div>
             <h3>学習会共有フォルダ</h3>
@@ -1528,20 +1528,7 @@ function renderSchedules() {
     function renderMaterials() {
       document.getElementById("driveLink").href = data.settings.driveUrl;
       document.getElementById("driveDescription").textContent = data.settings.driveDesc;
-      const links = [
-        { name: "KULeD",           url: "https://kuled.kindai.ac.jp/" },
-        { name: "梅信",             url: "https://www.kindai.ac.jp/tsushin/for-students/baishin/" },
-        { name: "丸善booklibrary", url: "https://elib.maruzen.co.jp/elib/html/GuestLogin?1/" },
-        { name: "大学公式サイト",   url: "https://www.kindai.ac.jp/tsushin/" }
-      ];
-      document.getElementById("universityLinks").innerHTML = links.map(x => `
-        <a class="link-card side-link" href="${x.url}" target="_blank">
-          <strong>🎓 ${x.name}</strong>
-        </a>
-      `).join("");
-      document.getElementById("sideLinks").innerHTML = links.slice(0,3).map(x =>
-        `<a class="sidebar-item side-link" href="${x.url}" target="_blank">${x.name}</a>`
-      ).join("");
+
     }
  
     // ============================================================
