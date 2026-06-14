@@ -276,6 +276,28 @@
   </style>
 </head>
 <body>
+  <!-- 役員編集モーダル -->
+<div id="editOfficerOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:480px;">
+    <h2>✏️ 役員メッセージの編集</h2>
+    <div class="form-group" style="margin-top:16px;">
+      <label>役職名</label>
+      <input id="editOfficerRole" placeholder="例：会長、副会長">
+    </div>
+    <div class="form-group">
+      <label>お名前</label>
+      <input id="editOfficerName" placeholder="例：なお">
+    </div>
+    <div class="form-group">
+      <label>メッセージ</label>
+      <textarea id="editOfficerMessage" style="min-height:120px;resize:vertical;" placeholder="メンバーへのメッセージを入力してください"></textarea>
+    </div>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="saveEditOfficer()">保存する</button>
+    <p style="margin-top:12px;font-size:12px;">
+      <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="closeEditOfficerOverlay()">キャンセル</span>
+    </p>
+  </div>
+</div>
  
   <header>
     <div class="header-inner">
@@ -2006,14 +2028,25 @@ function renderLinks() {
       saveData();
       renderAdminLists();
     }
- function editOfficer(i) {
+let editOfficerIndex = -1;
+
+function editOfficer(i) {
   const o = data.officers[i];
-  const newRole = prompt("役職名を編集してください", o.role);
-  if (newRole === null) return;
-  const newName = prompt("お名前を編集してください", o.name);
-  if (newName === null) return;
-  const newMessage = prompt("メッセージを編集してください", o.message);
-  if (newMessage === null) return;
+  editOfficerIndex = i;
+  document.getElementById("editOfficerRole").value    = o.role    || "";
+  document.getElementById("editOfficerName").value    = o.name    || "";
+  document.getElementById("editOfficerMessage").value = o.message || "";
+  document.getElementById("editOfficerOverlay").style.display = "flex";
+}
+
+function saveEditOfficer() {
+  const i = editOfficerIndex;
+  if (i < 0) return;
+  const o = data.officers[i];
+  const newRole    = document.getElementById("editOfficerRole").value.trim();
+  const newName    = document.getElementById("editOfficerName").value.trim();
+  const newMessage = document.getElementById("editOfficerMessage").value.trim();
+  if (!newRole || !newName || !newMessage) return alert("すべての項目を入力してください");
   o.role    = newRole;
   o.name    = newName;
   o.message = newMessage;
@@ -2021,7 +2054,13 @@ function renderLinks() {
     window.firebaseUpdateOfficer(i, { role: newRole, name: newName, message: newMessage });
   }
   saveData();
+  closeEditOfficerOverlay();
   renderAdminLists();
+}
+
+function closeEditOfficerOverlay() {
+  document.getElementById("editOfficerOverlay").style.display = "none";
+  editOfficerIndex = -1;
 }
     function saveRules() {
       const text = document.getElementById("adminRulesText").value;
