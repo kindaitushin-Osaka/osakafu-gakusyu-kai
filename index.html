@@ -1025,29 +1025,27 @@ function restoreBackup(event) {
   if (!file) return;
   const pass = prompt("復元を実行するには管理者パスワードを入力してください");
   if (pass === null) return;
-  if (pass !== "admin1234") return alert("パスワードが違います。復元を中止しました。");
+  if (pass !== window.adminPassword) return alert("パスワードが違います。復元を中止しました。");
   if (!confirm("現在のデータをバックアップファイルで上書きします。よろしいですか？")) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const backup = JSON.parse(e.target.result);
-      if (backup.notices)    data.notices    = backup.notices;
-      if (backup.boardPosts) data.boardPosts = backup.boardPosts;
-      if (backup.schedules)  data.schedules  = backup.schedules;
-      if (backup.faqs)       data.faqs       = backup.faqs;
-      if (backup.members)    data.members    = backup.members;
-      if (backup.officers)   data.officers   = backup.officers;
-      if (backup.rulesText)  data.rulesText  = backup.rulesText;
-      if (backup.settings)   data.settings   = backup.settings;
-      saveData();
-      alert("復元が完了しました");
-      document.getElementById("restoreFile").value = "";
+      alert("復元中です。しばらくお待ちください...");
+      const result = await window.restoreToFirestore(backup);
+      if (result) {
+        alert("復元が完了しました！ページをリロードします。");
+        location.reload();
+      } else {
+        alert("復元に失敗しました。コンソールを確認してください。");
+      }
     } catch(err) {
       alert("ファイルの読み込みに失敗しました。正しいバックアップファイルか確認してください。");
     }
   };
   reader.readAsText(file);
+  document.getElementById("restoreFile").value = "";
 }
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); renderAll(); }
  
@@ -1074,7 +1072,7 @@ function restoreBackup(event) {
  
     function checkPassword() {
       const password        = document.getElementById("sitePassword").value;
-      const correctPassword = "takoyaki"; // ← 合言葉はここを変える
+      const correctPassword = window.sitePassword || "";
       const err             = document.getElementById("passwordError");
       err.style.display = "none";
       if (password !== correctPassword) { err.style.display = "block"; return; }
