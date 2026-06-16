@@ -818,6 +818,19 @@ window.firebaseUpdateLink = async function(localIndex, updatedData) {
     console.error("リンク更新失敗:", err);
   }
 };
+window.firebaseReorderLink = async function(links) {
+  try {
+    for (let i = 0; i < links.length; i++) {
+      const docId = linkIdMap[i];
+      if (docId) {
+        await updateDoc(doc(db, "links", docId), { order: i });
+      }
+    }
+    console.log("リンク順序保存OK");
+  } catch(err) {
+    console.error("リンク順序保存失敗:", err);
+  }
+};
 
 function initLinkListener() {
   const q = query(collection(db, "links"), orderBy("createdAt", "asc"));
@@ -830,21 +843,29 @@ function initLinkListener() {
         category : raw.category || "その他",
         name     : raw.name     || "",
         url      : raw.url      || "",
-        desc     : raw.desc     || ""
+        desc     : raw.desc     || "",
+        order    : raw.order    ?? i
       });
       linkIdMap[i] = d.id;
     });
-if (window.data) {
-  window.data.links = links;
-  if (window.renderLinks) window.renderLinks();
-  const adminPanel = document.getElementById("adminPanel");
-  if (adminPanel && adminPanel.style.display === "grid") {
-    if (window.renderAdminLists) window.renderAdminLists();
-  }
-  console.log(`リンクを同期： ${links.length}件`);
-}
+    // orderフィールドでソート
+    links.sort((a, b) => a.order - b.order);
+    // linkIdMapをソート後の順序に合わせて再構築
+    const sortedIds = links.map((_, i) => linkIdMap[i]);
+    links.forEach((_, i) => { linkIdMap[i] = sortedIds[i]; });
+
+    if (window.data) {
+      window.data.links = links;
+      if (window.renderLinks) window.renderLinks();
+      const adminPanel = document.getElementById("adminPanel");
+      if (adminPanel && adminPanel.style.display === "grid") {
+        if (window.renderAdminLists) window.renderAdminLists();
+      }
+      console.log(`リンクを同期： ${links.length}件`);
+    }
   }, (err) => console.error("リンクonSnapshotエラー:", err));
 }
+
 window.initLinkListener = initLinkListener;
 // ============================================================
 // 【Firestore復元】
