@@ -363,8 +363,9 @@
             <button onclick="setBoardFilter('雑談', this)">雑談</button>
             <button onclick="setBoardFilter('卒業生より', this)">卒業のご挨拶</button>
           </div>
-          <div class="form-group"><input id="boardSearch" oninput="renderBoard()" placeholder="キーワード検索" /></div>
+          <div class="form-group"><input id="boardSearch" oninput="currentBoardPage=1; renderBoard()" placeholder="キーワード検索" />
           <div id="boardList" class="grid"></div>
+          <div id="boardPagination"></div>
         </div>
       </section>
  
@@ -1231,6 +1232,7 @@ function typeClass(type) {
     // ============================================================
     function setBoardFilter(filter, btn) {
       currentBoardFilter = filter;
+      currentBoardPage = 1; 
       document.querySelectorAll("#boardTab .filter-bar button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       renderBoard();
@@ -1337,64 +1339,116 @@ function likeReply(postIndex, replyIndex) {
       return authorFallback || authorEmail;
     }
  
-    function renderBoard() {
-      const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
-      const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
-      const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
-        const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
-        const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
-        return matchCat && matchKey;
-      });
-      document.getElementById("boardList").innerHTML = list.map(p => {
-        const displayAuthor = p.authorEmail ? resolveDisplayName(p.authorEmail, p.author) : (p.author || "匿名");
-        return `
-        <div class="post-card">
-          <div class="inline">
-            <span class="badge badge-info">${escapeHTML(p.category)}</span>
-            <span class="muted">👤 ${escapeHTML(displayAuthor)}</span>
-            ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
-            ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
-          </div>
-          <div class="title">${escapeHTML(p.title)}</div>
-          <div class="body-text">${autoLink(escapeHTML(p.body))}</div>
-          <div class="post-actions">
-          ${(() => { const liked = localStorage.getItem(`liked_post_${p._index}`); return `<button class="btn btn-light btn-small" style="${liked ? 'opacity:0.4;' : ''}" onclick="likePost(${p._index})" ${liked ? 'disabled' : ''}>❤️ ${p.likes}</button>`; })()}
-          ${["👍","😂","🎉","🙏"].map(s => {
-  const stamped = localStorage.getItem(`stamped_post_${p._index}_${s}`);
-  return `<button class="btn btn-ghost btn-small" style="${stamped ? 'opacity:0.4;' : ''}" onclick="stampPost(${p._index}, '${s}')" ${stamped ? 'disabled' : ''}>${s} ${p.stamps[s] || 0}</button>`;
-}).join("")}
+// ページネーション用変数
+let currentBoardPage = 1;
+const BOARD_PER_PAGE = 10;
 
+function renderBoard() {
+  const isAdmin = document.getElementById("adminPanel")?.style.display === "grid";
+  const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
+  const list = data.boardPosts.map((p, i) => ({...p, _index:i})).filter(p => {
+    const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
+    const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
+    return matchCat && matchKey;
+  });
 
-            <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
-            ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteBoardPost(${p._index})">🗑️ 削除</button>` : ""}
-          </div>
-          <div class="reply-box">
-            ${(p.replies || []).map((r, rIdx) => {
-              const rText    = typeof r === 'string' ? r : (r.text || '');
-              const rAuthor  = typeof r === 'object' ? resolveDisplayName(r.authorEmail, r.author) : "メンバー";
-              const rCreated = typeof r === 'object' && r.created ? r.created : (typeof r === 'object' && r.createdAt ? r.createdAt : '');
-              const rLikes   = typeof r === 'object' ? (r.likes || 0) : 0;
-              const alreadyLiked = localStorage.getItem(`liked_reply_${p._index}_${rIdx}`);              
+  // 総ページ数
+  const totalPages = Math.max(1, Math.ceil(list.length / BOARD_PER_PAGE));
+  if (currentBoardPage > totalPages) currentBoardPage = 1;
+
+  // 現在ページの投稿を切り出し
+  const start = (currentBoardPage - 1) * BOARD_PER_PAGE;
+  const paged = list.slice(start, start + BOARD_PER_PAGE);
+
+  // 投稿一覧レンダリング
+  document.getElementById("boardList").innerHTML = paged.map(p => {
+    const displayAuthor = p.authorEmail ? resolveDisplayName(p.authorEmail, p.author) : (p.author || "匿名");
+    return `
+    <div class="post-card">
+      <div class="inline">
+        <span class="badge badge-info">${escapeHTML(p.category)}</span>
+        <span class="muted">👤 ${escapeHTML(displayAuthor)}</span>
+        ${p.created ? `<span class="muted">🕐 ${escapeHTML(p.created)}</span>` : ''}
+        ${p.solved ? '<span class="badge badge-study">解決済み</span>' : ''}
+      </div>
+      <div class="title">${escapeHTML(p.title)}</div>
+      <div class="body-text">${autoLink(escapeHTML(p.body))}</div>
+      <div class="post-actions">
+        ${(() => { const liked = localStorage.getItem(`liked_post_${p._index}`); return `<button class="btn btn-light btn-small" style="${liked ? 'opacity:0.4;' : ''}" onclick="likePost(${p._index})" ${liked ? 'disabled' : ''}>❤️ ${p.likes}</button>`; })()}
+        ${["👍","😂","🎉","🙏"].map(s => {
+          const stamped = localStorage.getItem(`stamped_post_${p._index}_${s}`);
+          return `<button class="btn btn-ghost btn-small" style="${stamped ? 'opacity:0.4;' : ''}" onclick="stampPost(${p._index}, '${s}')" ${stamped ? 'disabled' : ''}>${s} ${p.stamps[s] || 0}</button>`;
+        }).join("")}
+        <button class="btn btn-ghost btn-small" onclick="toggleSolved(${p._index})">${p.solved ? "未解決に戻す" : "解決済み"}</button>
+        ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteBoardPost(${p._index})">🗑️ 削除</button>` : ""}
+      </div>
+      <div class="reply-box">
+        ${(p.replies || []).map((r, rIdx) => {
+          const rText    = typeof r === 'string' ? r : (r.text || '');
+          const rAuthor  = typeof r === 'object' ? resolveDisplayName(r.authorEmail, r.author) : "メンバー";
+          const rCreated = typeof r === 'object' && r.created ? r.created : '';
+          const rLikes   = typeof r === 'object' ? (r.likes || 0) : 0;
+          const alreadyLiked = localStorage.getItem(`liked_reply_${p._index}_${rIdx}`);
           return `<div class="reply-item">
-        <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${autoLink(escapeHTML(rText))}
-          ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
-          <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
-          ${isAdmin ? `<button class="btn btn-danger btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="deleteReply(${p._index}, ${rIdx})">🗑️ 削除</button>` : ''}
+            <span class="reply-author">💬 ${escapeHTML(rAuthor)}：</span>${autoLink(escapeHTML(rText))}
+            ${rCreated ? `<span class="muted" style="font-size:11px;margin-left:8px;">🕐 ${escapeHTML(rCreated)}</span>` : ''}
+            <button class="btn btn-ghost btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;${alreadyLiked ? 'opacity:0.4;' : ''}" onclick="likeReply(${p._index}, ${rIdx})" ${alreadyLiked ? 'disabled' : ''}>👍 ${rLikes}</button>
+            ${isAdmin ? `<button class="btn btn-danger btn-small" style="font-size:11px;padding:3px 8px;margin-left:8px;" onclick="deleteReply(${p._index}, ${rIdx})">🗑️ 削除</button>` : ''}
           </div>`;
-            }).join("")}
-            <div class="reply-input-row" style="flex-direction:column;gap:8px;">
-             <textarea id="replyInput_${p._index}" placeholder="返信を入力...（Shift+Enterで改行）" style="min-height:60px;font-size:13px;border-radius:8px;border:1px solid #cfd8e3;padding:8px;width:100%;resize:vertical;"></textarea>
-             <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
-             <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;">
-             <input type="checkbox" id="replyAnon_${p._index}" style="width:auto;">匿名
-           </label>
-             <button class="btn btn-small" onclick="addReply(${p._index})">返信</button>
+        }).join("")}
+        <div class="reply-input-row" style="flex-direction:column;gap:8px;">
+          <textarea id="replyInput_${p._index}" placeholder="返信を入力...（Shift+Enterで改行）" style="min-height:60px;font-size:13px;border-radius:8px;border:1px solid #cfd8e3;padding:8px;width:100%;resize:vertical;"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;">
+              <input type="checkbox" id="replyAnon_${p._index}" style="width:auto;">匿名
+            </label>
+            <button class="btn btn-small" onclick="addReply(${p._index})">返信</button>
           </div>
-          </div>
-          </div>
-        </div>`
-      }).join("") || '<div class="muted">該当する投稿はありません。</div>';
-    }
+        </div>
+      </div>
+    </div>`;
+  }).join("") || '<div class="muted">該当する投稿はありません。</div>';
+
+  // ページネーションUI
+  document.getElementById("boardPagination").innerHTML = totalPages <= 1 ? "" : `
+    <div style="display:flex;gap:6px;justify-content:center;align-items:center;
+      flex-wrap:wrap;margin-top:16px;">
+      <button class="btn btn-ghost btn-small"
+        onclick="goToBoardPage(${currentBoardPage - 1})"
+        ${currentBoardPage === 1 ? 'disabled style="opacity:0.4;"' : ''}>
+        ← 前へ
+      </button>
+      ${Array.from({length: totalPages}, (_, i) => i + 1).map(p => `
+        <button class="btn btn-small ${p === currentBoardPage ? '' : 'btn-ghost'}"
+          style="${p === currentBoardPage ? '' : 'background:#f3f6f9;color:#374151;'}"
+          onclick="goToBoardPage(${p})">
+          ${p}
+        </button>`).join("")}
+      <button class="btn btn-ghost btn-small"
+        onclick="goToBoardPage(${currentBoardPage + 1})"
+        ${currentBoardPage === totalPages ? 'disabled style="opacity:0.4;"' : ''}>
+        次へ →
+      </button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--gray);margin-top:8px;">
+      ${list.length}件中 ${start + 1}〜${Math.min(start + BOARD_PER_PAGE, list.length)}件を表示
+    </div>`;
+}
+
+function goToBoardPage(page) {
+  const keyword = document.getElementById("boardSearch")?.value?.trim().toLowerCase() || "";
+  const list = data.boardPosts.filter(p => {
+    const matchCat = currentBoardFilter === "すべて" || p.category === currentBoardFilter;
+    const matchKey = !keyword || (p.title + p.body + p.author).toLowerCase().includes(keyword);
+    return matchCat && matchKey;
+  });
+  const totalPages = Math.max(1, Math.ceil(list.length / BOARD_PER_PAGE));
+  if (page < 1 || page > totalPages) return;
+  currentBoardPage = page;
+  renderBoard();
+  // ページ切り替え時に掲示板の先頭にスクロール
+  document.getElementById("boardTab")?.scrollIntoView({behavior: "smooth", block: "start"});
+}
  
     // ============================================================
     // スケジュール
@@ -1905,7 +1959,11 @@ document.getElementById("adminLinkList").innerHTML = links.map((l, i) => `
   <div class="sidebar-item">
     <strong>${escapeHTML(l.category)}</strong>　${escapeHTML(l.name)}<br>
     <span style="font-size:12px;color:var(--gray);">${escapeHTML(l.url)}</span>
-    <div style="margin-top:8px;display:flex;gap:8px;">
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-small" onclick="moveLinkUp(${i})"
+        ${i === 0 ? 'disabled style="opacity:0.4;"' : ''}>↑ 上へ</button>
+      <button class="btn btn-ghost btn-small" onclick="moveLinkDown(${i})"
+        ${i === links.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>↓ 下へ</button>
       <button class="btn btn-light btn-small" onclick="editLink(${i})">編集</button>
       <button class="btn btn-danger btn-small" onclick="deleteLink(${i})">削除</button>
     </div>
@@ -2042,7 +2100,29 @@ function deleteLink(i) {
   saveData();
   renderAdminLists();
 }
+function moveLinkUp(i) {
+  if (i <= 0) return;
+  const links = data.links;
+  [links[i - 1], links[i]] = [links[i], links[i - 1]];
+  saveData();
+  if (typeof window.firebaseReorderLink === "function") {
+    window.firebaseReorderLink(links);
+  }
+  renderAdminLists();
+  renderLinks();
+}
 
+function moveLinkDown(i) {
+  const links = data.links;
+  if (i >= links.length - 1) return;
+  [links[i], links[i + 1]] = [links[i + 1], links[i]];
+  saveData();
+  if (typeof window.firebaseReorderLink === "function") {
+    window.firebaseReorderLink(links);
+  }
+  renderAdminLists();
+  renderLinks();
+}
 let editLinkIndex = -1;
 
 function editLink(i) {
