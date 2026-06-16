@@ -363,9 +363,15 @@
             <button onclick="setBoardFilter('雑談', this)">雑談</button>
             <button onclick="setBoardFilter('卒業生より', this)">卒業のご挨拶</button>
           </div>
-          <div class="form-group"><input id="boardSearch" oninput="currentBoardPage=1; renderBoard()" placeholder="キーワード検索" />
-          <div id="boardList" class="grid"></div>
-          <div id="boardPagination"></div>
+<div style="position:sticky;top:70px;z-index:10;background:white;padding:8px 0;">
+  <div class="form-group" style="margin-bottom:0;">
+    <input id="boardSearch" 
+      oninput="currentBoardPage=1; renderBoard()" 
+      placeholder="キーワード検索" />
+  </div>
+</div>
+<div id="boardList" class="grid" style="margin-top:12px;"></div>
+<div id="boardPagination"></div>
         </div>
       </section>
  
