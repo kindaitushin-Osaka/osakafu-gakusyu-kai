@@ -820,10 +820,17 @@ window.firebaseUpdateLink = async function(localIndex, updatedData) {
 };
 window.firebaseReorderLink = async function(links) {
   try {
+    const snap = await getDocs(collection(db, "links"));
+    const allDocs = snap.docs;
     for (let i = 0; i < links.length; i++) {
-      const docId = linkIdMap[i];
-      if (docId) {
-        await updateDoc(doc(db, "links", docId), { order: i });
+      const link = links[i];
+      // 名前とURLで一致するドキュメントを探す
+      const matchDoc = allDocs.find(d => 
+        d.data().name === link.name && 
+        d.data().url === link.url
+      );
+      if (matchDoc) {
+        await updateDoc(doc(db, "links", matchDoc.id), { order: i });
       }
     }
     console.log("リンク順序保存OK");
@@ -844,15 +851,13 @@ function initLinkListener() {
         name     : raw.name     || "",
         url      : raw.url      || "",
         desc     : raw.desc     || "",
-        order    : raw.order    ?? i
+        order    : raw.order    ?? 9999
       });
       linkIdMap[i] = d.id;
     });
+
     // orderフィールドでソート
     links.sort((a, b) => a.order - b.order);
-    // linkIdMapをソート後の順序に合わせて再構築
-    const sortedIds = links.map((_, i) => linkIdMap[i]);
-    links.forEach((_, i) => { linkIdMap[i] = sortedIds[i]; });
 
     if (window.data) {
       window.data.links = links;
