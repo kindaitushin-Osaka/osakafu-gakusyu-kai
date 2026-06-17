@@ -44,23 +44,20 @@ const analytics = getAnalytics(app);
 console.log("Firebase 接続OK");
 window.db = db;
 // ── 管理者パスワード（Firestoreから取得）───────────────────
-window.adminPassword = "admin1234"; // Firestore取得前の仮パスワード
+// ── 管理者パスワード・合言葉（Firestoreから取得）───────────────────
+let _adminPassword = "";
+let _sitePassword  = "";
 
 getDoc(doc(db, "settings", "admin")).then(snap => {
-  if (snap.exists() && snap.data().password) {
-    window.adminPassword = snap.data().password;
-    console.log("管理者パスワード取得OK");
+  if (snap.exists()) {
+    if (snap.data().password)     _adminPassword = snap.data().password;
+    if (snap.data().sitePassword) _sitePassword  = snap.data().sitePassword;
+    console.log("管理者パスワード・合言葉取得OK");
   }
-}).catch(err => console.error("管理者パスワード取得失敗:", err));
-// ── 合言葉（Firestoreから取得）───────────────────
-window.sitePassword = "takoyaki"; // Firestore取得前の仮
+}).catch(err => console.error("パスワード取得失敗:", err));
 
-getDoc(doc(db, "settings", "admin")).then(snap => {
-  if (snap.exists() && snap.data().sitePassword) {
-    window.sitePassword = snap.data().sitePassword;
-    console.log("合言葉取得OK");
-  }
-}).catch(err => console.error("合言葉取得失敗:", err));
+window.checkAdminPassword = function(input) { return input === _adminPassword; };
+window.checkSitePassword  = function(input) { return input === _sitePassword;  };
 // ── docId マップ ───────────────────────────────────────────
 let boardIdMap    = {};
 let noticeIdMap   = {};
