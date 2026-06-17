@@ -1257,9 +1257,9 @@ function typeClass(type) {
       const anon     = document.getElementById("boardAnon").checked;
       if (!title || !body) return alert("タイトルと内容を入力してください");
       const post = {
-        category, title, body,
-        author      : anon ? "匿名" : currentDisplayName,
-        authorEmail : anon ? "" : currentEmail,
+      category, title, body,
+      author      : anon ? "匿名" : currentDisplayName,
+      authorEmail : currentEmail,  // 匿名でも常にメールアドレスを保存
         likes: 0, solved: false,
         stamps: { "❤": 0, "👍": 0, "😊": 0, "🎉": 0, "💪": 0 },
         replies: []
@@ -1305,7 +1305,7 @@ function stampPost(i, s) {
       const reply = {
         text,
         author      : isAnon ? "匿名" : currentDisplayName,
-        authorEmail : isAnon ? "" : currentEmail,
+        authorEmail : currentEmail,  // 匿名でも常に保存
         likes       : 0
       };
       data.boardPosts[i].replies.push(reply);
