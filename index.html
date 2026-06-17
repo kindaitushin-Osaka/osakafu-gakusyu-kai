@@ -862,10 +862,10 @@
         近畿大学のメールアドレスを入力してください<br>
         <span style="font-size:12px;">（@kindai.ac.jp のみ入室できます）</span>
       </p>
-      <button class="btn" style="width:100%;margin-bottom:12px;" onclick="checkEmail()">次へ →</button>
       <input type="email" id="loginEmail" class="overlay-input"
         placeholder="xxx@kindai.ac.jp"
         onkeydown="if(event.key==='Enter') checkEmail()">
+          <button class="btn" style="width:100%;margin-bottom:12px;" onclick="checkEmail()">次へ →</button>
     <p id="emailError" class="overlay-error">正しい学籍番号入りの近大メール（@kindai.ac.jp）を入力してください</p>
     </div>
   </div>
@@ -876,10 +876,10 @@
       <h2>📘 学習会ポータル</h2>
       <div class="step-badge">STEP 2 / 3　合言葉確認</div>
       <p class="muted" style="margin-bottom:20px;">合言葉を入力してください</p>
-         <button class="btn" style="width:100%;" onclick="checkPassword()">次へ →</button>
       <input type="password" id="sitePassword" class="overlay-input"
         placeholder="合言葉"
         onkeydown="if(event.key==='Enter') checkPassword()">
+               <button class="btn" style="width:100%;" onclick="checkPassword()">次へ →</button>
       <p id="passwordError" class="overlay-error">合言葉が違います</p>
       <p style="margin-top:16px;font-size:12px;">
         <span style="color:var(--blue);cursor:pointer;text-decoration:underline;"
@@ -895,10 +895,10 @@
       <div class="step-badge">STEP 3 / 3　表示名の設定</div>
       <p class="muted" style="margin-bottom:8px;">掲示板・メンバー登録で使う名前を設定してください</p>
       <p class="muted" style="margin-bottom:20px;font-size:12px;">（後からヘッダーの「名前変更」ボタンで変更できます）</p>
-          <button class="btn" style="width:100%;" onclick="saveDisplayName()">入室する 🎉</button>
       <input type="text" id="displayNameInput" class="overlay-input"
         placeholder="例：なお、たろう"
         onkeydown="if(event.key==='Enter') saveDisplayName()">
+                  <button class="btn" style="width:100%;" onclick="saveDisplayName()">入室する 🎉</button>
       <p id="displayNameError" class="overlay-error">名前を入力してください（2文字以上）</p>
     </div>
   </div>
