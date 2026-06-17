@@ -1723,7 +1723,8 @@ document.getElementById("memberList").innerHTML = filteredMembers.length === 0
     return `
     <div class="member-card">
 ${m.icon && m.icon.startsWith("http")
-  ? `<img src="${escapeHTML(m.icon)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;">`
+  ? `<img src="${escapeHTML(m.icon)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;">
+     <div class="muted" style="text-align:center;font-size:12px;">${getLabelFromIcon(m.icon)}</div>`
   : `<div class="member-icon">${escapeHTML(m.icon || "👤")}</div>`
 }
       <div class="name">${escapeHTML(displayName)}</div>
@@ -1737,7 +1738,19 @@ ${m.icon && m.icon.startsWith("http")
       </div>
     </div>`
   }).join("");
- 
+ function getLabelFromIcon(iconUrl) {
+  const map = {
+    "icon_law.png"      : "⚖️ 法学部",
+    "icon_commerce.png" : "💻 商経短期大学部",
+    "icon_arch.png"     : "🏠 建築学部",
+    "icon_lib.png"      : "📖 司書",
+    "icon_student.png"  : "📝 履修生"
+  };
+  for (const [key, label] of Object.entries(map)) {
+    if (iconUrl.includes(key)) return label;
+  }
+  return "";
+}
     }
  
     // ============================================================
