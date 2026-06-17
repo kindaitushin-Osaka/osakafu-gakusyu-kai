@@ -1016,7 +1016,7 @@ window.addEventListener('load', function() {
 function confirmReset() {
   const pass = prompt("初期化を実行するには管理者パスワードを入力してください");
   if (pass === null) return;
-  if (pass !== "admin1234") return alert("パスワードが違います。初期化を中止しました。");
+ if (!window.checkAdminPassword(pass)) return alert("パスワードが違います。初期化を中止しました。");
   if (!confirm("本当に全データを削除しますか？")) return;
   if (!confirm("この操作は元に戻せません。本当に実行しますか？")) return;
   resetAllData();
@@ -1083,22 +1083,21 @@ function checkEmail() {
   document.getElementById("passwordOverlay").style.display = "flex";
 }
  
-    function checkPassword() {
-      const password        = document.getElementById("sitePassword").value;
-      const correctPassword = window.sitePassword || "";
-      const err             = document.getElementById("passwordError");
-      err.style.display = "none";
-      if (password !== correctPassword) { err.style.display = "block"; return; }
-      const email = sessionStorage.getItem("pendingEmail") || "";
-      sessionStorage.removeItem("pendingEmail");
-      localStorage.setItem("kindaiEmail", email);
-      localStorage.setItem("siteAccess", "ok");
-      currentEmail = email;
-      document.getElementById("passwordOverlay").style.display = "none";
-      if (typeof window.checkAndLoadDisplayName === "function") {
-        window.checkAndLoadDisplayName(email);
-      }
-    }
+function checkPassword() {
+  const password = document.getElementById("sitePassword").value;
+  const err      = document.getElementById("passwordError");
+  err.style.display = "none";
+  if (!window.checkSitePassword(password)) { err.style.display = "block"; return; }
+  const email = sessionStorage.getItem("pendingEmail") || "";
+  sessionStorage.removeItem("pendingEmail");
+  localStorage.setItem("kindaiEmail", email);
+  localStorage.setItem("siteAccess", "ok");
+  currentEmail = email;
+  document.getElementById("passwordOverlay").style.display = "none";
+  if (typeof window.checkAndLoadDisplayName === "function") {
+    window.checkAndLoadDisplayName(email);
+  }
+}
  
     function backToEmail() {
       document.getElementById("sitePassword").value = "";
@@ -1794,7 +1793,7 @@ ${m.icon && m.icon.startsWith("http")
     // 管理ページ
     // ============================================================
 function loginAdmin() {
-  if (document.getElementById("adminPass").value !== window.adminPassword) return alert("パスワードが違います");
+ if (!window.checkAdminPassword(document.getElementById("adminPass").value)) return alert("パスワードが違います");
   document.getElementById("adminLogin").style.display = "none";
   document.getElementById("adminPanel").style.display = "grid";
   renderMembers();
