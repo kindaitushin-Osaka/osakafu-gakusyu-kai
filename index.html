@@ -865,8 +865,7 @@
       <input type="email" id="loginEmail" class="overlay-input"
         placeholder="xxx@kindai.ac.jp"
         onkeydown="if(event.key==='Enter') checkEmail()">
-      <button class="btn" style="width:100%;" onclick="checkEmail()">次へ →</button>
-      <p id="emailError" class="overlay-error">@kindai.ac.jp のアドレスを入力してください</p>
+    <p id="emailError" class="overlay-error">正しい学籍番号入りの近大メール（@kindai.ac.jp）を入力してください</p>
     </div>
   </div>
  
@@ -1067,15 +1066,22 @@ function restoreBackup(event) {
     // ============================================================
     // ログイン処理（3ステップ）
     // ============================================================
-    function checkEmail() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const err   = document.getElementById("emailError");
-      err.style.display = "none";
-      if (!email.endsWith("@kindai.ac.jp")) { err.style.display = "block"; return; }
-      sessionStorage.setItem("pendingEmail", email);
-      document.getElementById("emailOverlay").style.display = "none";
-      document.getElementById("passwordOverlay").style.display = "flex";
-    }
+function checkEmail() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const err   = document.getElementById("emailError");
+  err.style.display = "none";
+
+  // 数字9桁 + 英小文字1文字 + @kindai.ac.jp のみ許可
+  const pattern = /^[0-9]{9}[a-z]@kindai\.ac\.jp$/;
+
+  if (!pattern.test(email)) {
+    err.style.display = "block";
+    return;
+  }
+  sessionStorage.setItem("pendingEmail", email);
+  document.getElementById("emailOverlay").style.display = "none";
+  document.getElementById("passwordOverlay").style.display = "flex";
+}
  
     function checkPassword() {
       const password        = document.getElementById("sitePassword").value;
