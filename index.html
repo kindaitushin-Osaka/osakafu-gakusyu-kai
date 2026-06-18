@@ -1374,7 +1374,10 @@ function renderBoard() {
 
   // 投稿一覧レンダリング
   document.getElementById("boardList").innerHTML = paged.map(p => {
-    const displayAuthor = p.authorEmail ? resolveDisplayName(p.authorEmail, p.author) : (p.author || "匿名");
+// 変更後
+const displayAuthor = p.author === "匿名" 
+  ? "匿名" 
+  : resolveDisplayName(p.authorEmail, p.author);
     return `
     <div class="post-card">
       <div class="inline">
