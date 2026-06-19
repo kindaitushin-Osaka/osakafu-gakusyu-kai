@@ -1577,8 +1577,8 @@ function renderSchedules() {
           <div style="margin-bottom:4px;">
             <span class="badge ${typeClass(s.type)}">${escapeHTML(s.type)}</span>
           </div>
-          <div class="title" style="margin:4px 0;">${escapeHTML(s.title)}</div>
-          <div class="muted">📍 ${escapeHTML(s.place || "未定")} ／ 参加 ${s.participants}名</div>
+<div class="title" style="margin:4px 0;">${autoLink(escapeHTML(s.title))}</div>
+<div class="muted">📍 ${autoLink(escapeHTML(s.place || "未定"))} ／ 参加 ${s.participants}名</div>
         </div>
         <div style="flex-shrink:0;">
           <button class="btn ${s.joined ? 'btn-danger' : ''}" onclick="joinSchedule(${i})">
