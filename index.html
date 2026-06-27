@@ -1,4 +1,4 @@
-
+ML
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,53 +7,66 @@
   <title>近畿大学通信教育部 大阪府学習会</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink:       #1e3248;
-      --blue:      #2f6fb5;
-      --blue-mid:  #4a8fd4;
-      --blue-light:#e8f2fc;
-      --sea:       #0a4a7a;
-      --foam:      #f0f7ff;
+      --blue:      #1a56a0;
+      --blue-mid:  #2d7dd2;
+      --accent:    #7ec8f5;
+      --bg:        #060f1e;
+      --card:      rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.10);
       --white:     #ffffff;
-      --gray:      #5a6a7a;
-      --line:      #d0dce8;
-      --gold:      #c8962a;
+      --muted:     rgba(255,255,255,0.55);
+      --line:      rgba(255,255,255,0.10);
     }
  
     * { box-sizing: border-box; margin: 0; padding: 0; }
  
     body {
-      font-family: "Noto Sans JP", sans-serif;
-      background: var(--foam);
-      color: var(--ink);
-      line-height: 1.8;
+      font-family: "BIZ UDPGothic", sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      line-height: 1.85;
       overflow-x: hidden;
+      min-height: 100vh;
     }
  
-    /* ── 波アニメーション ── */
-    .wave-bg {
+    /* ── 背景グラデーション ── */
+    .bg-glow {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 0;
       pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(29,86,160,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(45,125,210,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(126,200,245,0.06) 0%, transparent 60%);
+    }
+ 
+    /* ── 波 ── */
+    .wave-wrap {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%; height: 260px;
+      z-index: 0;
+      pointer-events: none;
       overflow: hidden;
     }
-    .wave-bg svg {
+    .wave-wrap svg {
       position: absolute;
       bottom: 0;
       width: 200%;
-      opacity: 0.07;
-      animation: waveMove 18s linear infinite;
+      opacity: 0.08;
+      animation: wavemove 20s linear infinite;
     }
-    .wave-bg svg:nth-child(2) {
-      opacity: 0.04;
-      animation-duration: 25s;
+    .wave-wrap svg:nth-child(2) {
+      opacity: 0.05;
+      animation-duration: 30s;
       animation-direction: reverse;
     }
-    @keyframes waveMove {
+    @keyframes wavemove {
       0%   { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
@@ -62,359 +75,275 @@
     .page {
       position: relative;
       z-index: 1;
-      min-height: 100vh;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 48px 24px 64px;
     }
  
-    /* ── ヘッダー ── */
-    .site-header {
-      width: 100%;
-      max-width: 720px;
-      display: flex;
-      justify-content: center;
-      margin-bottom: 48px;
-    }
-    .site-name {
-      font-size: 13px;
+    /* ── ヘッダーラベル ── */
+    .site-label {
+      font-size: 11px;
       font-weight: 700;
-      color: var(--gray);
-      letter-spacing: 0.08em;
-      border-bottom: 2px solid var(--blue-light);
-      padding-bottom: 6px;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 48px;
+      opacity: 0.8;
     }
  
     /* ── ヒーロー ── */
     .hero {
-      max-width: 720px;
-      width: 100%;
       text-align: center;
       margin-bottom: 56px;
+      width: 100%;
     }
  
     .logo-wrap {
-      margin-bottom: 28px;
-      position: relative;
-      display: inline-block;
+      margin-bottom: 20px;
     }
     .logo-wrap img {
-      width: 160px;
-      height: 160px;
+      width: 148px;
+      height: 148px;
       object-fit: contain;
-      filter: drop-shadow(0 8px 24px rgba(47,111,181,0.22));
-      animation: floatLogo 4s ease-in-out infinite;
+      filter:
+        drop-shadow(0 0 24px rgba(126,200,245,0.45))
+        drop-shadow(0 0 8px rgba(79,163,232,0.30));
+      animation: float 5s ease-in-out infinite;
     }
-    @keyframes floatLogo {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-10px); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-12px); }
     }
  
-    .mascot-name {
+    .mascot-badge {
       display: inline-block;
-      background: var(--gold);
-      color: white;
+      border: 1px solid rgba(126,200,245,0.4);
+      color: var(--accent);
       font-size: 11px;
       font-weight: 700;
-      padding: 3px 12px;
+      letter-spacing: 0.12em;
+      padding: 4px 16px;
       border-radius: 999px;
-      letter-spacing: 0.1em;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
+      background: rgba(126,200,245,0.06);
     }
  
     .hero-title {
-      font-family: "Noto Serif JP", serif;
-      font-size: clamp(26px, 5vw, 40px);
-      font-weight: 900;
-      color: var(--sea);
-      line-height: 1.4;
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 700;
+      line-height: 1.5;
       margin-bottom: 16px;
+      letter-spacing: 0.02em;
     }
-    .hero-title span {
-      color: var(--blue);
-    }
+    .hero-title .accent { color: var(--accent); }
  
     .hero-sub {
-      font-size: 15px;
-      color: var(--gray);
-      max-width: 480px;
-      margin: 0 auto 32px;
-    }
- 
-    /* ── 特徴カード ── */
-    .features {
-      max-width: 720px;
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 56px;
-    }
- 
-    .feature-card {
-      background: var(--white);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 24px 16px;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(30,50,72,0.06);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(30,50,72,0.10);
-    }
-    .feature-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-      display: block;
-    }
-    .feature-title {
       font-size: 14px;
-      font-weight: 900;
-      color: var(--sea);
-      margin-bottom: 6px;
-    }
-    .feature-text {
-      font-size: 12px;
-      color: var(--gray);
-      line-height: 1.7;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.9;
     }
  
-    /* ── 活動紹介 ── */
-    .about {
-      max-width: 720px;
+    /* ── 区切り ── */
+    .sep {
       width: 100%;
-      background: var(--white);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 40px 40px;
-      margin-bottom: 48px;
-      box-shadow: 0 2px 16px rgba(30,50,72,0.06);
+      height: 1px;
+      background: var(--line);
+      margin: 48px 0;
     }
-    .about-label {
-      font-size: 11px;
+ 
+    /* ── 学習会について ── */
+    .about { width: 100%; }
+ 
+    .section-eyebrow {
+      font-size: 10px;
       font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.12em;
+      letter-spacing: 0.2em;
+      color: var(--accent);
       text-transform: uppercase;
       margin-bottom: 12px;
+      opacity: 0.8;
     }
-    .about-title {
-      font-family: "Noto Serif JP", serif;
-      font-size: 22px;
-      font-weight: 900;
-      color: var(--sea);
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-    .about-text {
-      font-size: 14px;
-      color: #374151;
-      line-height: 2;
-      white-space: pre-wrap;
+    .section-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 24px;
+      letter-spacing: 0.03em;
     }
  
-    /* ── 区切り線 ── */
-    .divider {
-      width: 48px;
-      height: 3px;
-      background: linear-gradient(90deg, var(--blue), var(--blue-mid));
-      border-radius: 999px;
-      margin: 20px 0;
+    .about-body {
+      font-size: 14px;
+      color: rgba(255,255,255,0.78);
+      line-height: 2.1;
+      border-left: 2px solid rgba(126,200,245,0.35);
+      padding-left: 20px;
     }
+    .about-body p { margin-bottom: 12px; }
+    .about-body p:last-child { margin-bottom: 0; }
  
     /* ── お問い合わせ ── */
     .contact {
-      max-width: 720px;
       width: 100%;
       text-align: center;
-      margin-bottom: 48px;
     }
-    .contact-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.12em;
-      margin-bottom: 8px;
-    }
-    .contact-title {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--sea);
-      margin-bottom: 20px;
-    }
+ 
     .contact-mail {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--blue), var(--blue-mid));
       color: white;
+      font-family: "BIZ UDPGothic", sans-serif;
       font-size: 14px;
       font-weight: 700;
-      padding: 14px 28px;
+      padding: 15px 32px;
       border-radius: 999px;
       text-decoration: none;
-      transition: background 0.15s, transform 0.15s;
-      box-shadow: 0 4px 16px rgba(47,111,181,0.28);
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 20px rgba(29,86,160,0.50), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      transition: transform 0.15s, box-shadow 0.15s;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto 20px;
     }
     .contact-mail:hover {
-      background: var(--sea);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(29,86,160,0.60), 0 0 0 1px rgba(255,255,255,0.12) inset;
     }
  
-    /* ── SNS・リンク ── */
     .links-wrap {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-top: 20px;
+      margin-top: 16px;
     }
     .link-btn {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      background: var(--white);
-      border: 1.5px solid var(--line);
-      color: var(--ink);
-      font-size: 13px;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: rgba(255,255,255,0.80);
+      font-family: "BIZ UDPGothic", sans-serif;
+      font-size: 12px;
       font-weight: 700;
-      padding: 10px 20px;
+      padding: 9px 18px;
       border-radius: 999px;
       text-decoration: none;
-      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 2px 8px rgba(30,50,72,0.06);
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.15s, color 0.15s, transform 0.15s;
     }
     .link-btn:hover {
-      border-color: var(--blue);
+      border-color: var(--accent);
+      color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(30,50,72,0.10);
     }
-    .link-btn.x     { border-color: #000; }
-    .link-btn.insta { border-color: #c13584; }
-    .link-btn.univ  { border-color: var(--blue); }
  
     /* ── フッター ── */
     footer {
-      max-width: 720px;
       width: 100%;
       text-align: center;
-      font-size: 12px;
-      color: var(--gray);
-      padding-top: 32px;
+      font-size: 11px;
+      color: var(--muted);
+      padding-top: 40px;
       border-top: 1px solid var(--line);
+      margin-top: 56px;
+      letter-spacing: 0.06em;
+      opacity: 0.6;
     }
  
-    /* ── レスポンシブ ── */
-    @media (max-width: 600px) {
-      .features { grid-template-columns: 1fr; }
-      .about { padding: 28px 20px; }
-      .hero-title { font-size: 24px; }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 22px; }
       .logo-wrap img { width: 120px; height: 120px; }
+      .links-wrap { flex-direction: column; align-items: center; }
+      .link-btn { width: 100%; max-width: 280px; justify-content: center; }
     }
   </style>
 </head>
 <body>
  
-  <!-- 波の背景 -->
-  <div class="wave-bg">
-    <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#2f6fb5" d="M0,160L60,170.7C120,181,240,203,360,197.3C480,192,600,160,720,144C840,128,960,128,1080,144C1200,160,1320,192,1380,208L1440,224L1440,320L0,320Z"/>
+  <div class="bg-glow"></div>
+ 
+  <div class="wave-wrap">
+    <svg viewBox="0 0 1440 260" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#2d7dd2" d="M0,160L80,149.3C160,139,320,117,480,122.7C640,128,800,160,960,165.3C1120,171,1280,149,1360,138.7L1440,128L1440,260L0,260Z"/>
     </svg>
-    <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#0a4a7a" d="M0,224L60,213.3C120,203,240,181,360,181.3C480,181,600,203,720,218.7C840,235,960,245,1080,234.7C1200,224,1320,192,1380,176L1440,160L1440,320L0,320Z"/>
+    <svg viewBox="0 0 1440 260" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#1a56a0" d="M0,192L80,181.3C160,171,320,149,480,154.7C640,160,800,192,960,197.3C1120,203,1280,181,1360,170.7L1440,160L1440,260L0,260Z"/>
     </svg>
   </div>
  
   <div class="page">
  
-    <header class="site-header">
-      <div class="site-name">近畿大学通信教育部　大阪府学習会</div>
-    </header>
+    <div class="site-label">Kindai University · Osaka Study Group</div>
  
     <!-- ヒーロー -->
     <section class="hero">
       <div class="logo-wrap">
         <img src="https://kindaitushin-osaka.github.io/osakafu-gakusyu-kai/Osaka-Gakusyukai-LOGO.png"
-             alt="大阪府学習会ロゴ ツナまる">
+             alt="大阪府学習会 ツナまる">
       </div>
-      <div class="mascot-name">🐟 愛称：ツナまる</div>
+      <div class="mascot-badge">🐟 愛称：ツナまる</div>
       <h1 class="hero-title">
-        一緒に学び、<span>支え合う</span><br>学習コミュニティ
+        一緒に学び、<span class="accent">支え合う</span><br>学習コミュニティ
       </h1>
       <p class="hero-sub">
-        仕事や家庭と両立しながら学ぶ、近畿大学通信教育部の仲間たちが集まる大阪府の学習会です。
+        仕事や家庭と両立しながら学ぶ、<br>近畿大学通信教育部の仲間が集まる大阪府の学習会です。
       </p>
     </section>
  
-    <!-- 特徴 -->
-    <div class="features">
-      <div class="feature-card">
-        <span class="feature-icon">📚</span>
-        <div class="feature-title">学習サポート</div>
-        <p class="feature-text">レポートや試験の悩みを仲間と一緒に解決します</p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">🤝</span>
-        <div class="feature-title">仲間とのつながり</div>
-        <p class="feature-text">同じ目標を持つ学生同士が支え合える場所です</p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">🎓</span>
-        <div class="feature-title">卒業までともに</div>
-        <p class="feature-text">卒業生も含めた温かいコミュニティが広がっています</p>
-      </div>
-    </div>
+    <div class="sep"></div>
  
-    <!-- 活動紹介 -->
+    <!-- 学習会について -->
     <section class="about">
-      <div class="about-label">About Us</div>
-      <h2 class="about-title">大阪府学習会について</h2>
-      <div class="divider"></div>
-      <p class="about-text">大阪府学習会は、近畿大学通信教育部に在籍する学生が自主的に運営する学習サークルです。
- 
-仕事・育児・介護…さまざまな事情を抱えながらも「学びたい」という思いを持つ仲間が集まっています。
- 
-オンラインでの勉強会や情報交換を通じて、一人ひとりが無理なく学び続けられる環境づくりを大切にしています。
- 
-シンボルマークの「ツナまる」は、広い海を力強く泳ぎ続ける回遊魚の姿を重ね、仲間とのつながりと個人の成長を象徴しています。</p>
+      <div class="section-eyebrow">About Us</div>
+      <h2 class="section-title">大阪府学習会について</h2>
+      <div class="about-body">
+        <p>大阪府学習会は、近畿大学通信教育部に在籍する学生が自主的に運営する学習サークルです。</p>
+        <p>仕事・育児・介護…さまざまな事情を抱えながらも「学びたい」という思いを持つ仲間が集まっています。</p>
+        <p>試験後のZOOMでのお疲れ様会や情報交換、裁判所見学などのイベントなどの活動をしています。</p>
+        <p>レポートや試験の悩みを一緒に考えながら卒業まで支え合う仲間の集まりです。</p>
+      </div>
     </section>
+ 
+    <div class="sep"></div>
  
     <!-- お問い合わせ -->
     <section class="contact">
-      <div class="contact-label">Contact</div>
-      <h2 class="contact-title">参加・お問い合わせ</h2>
+      <div class="section-eyebrow">Contact</div>
+      <h2 class="section-title" style="margin-bottom:24px;">参加・お問い合わせ</h2>
+ 
       <a href="mailto:kindai.osaka.s@gmail.com" class="contact-mail">
         ✉️ メールでお問い合わせ
       </a>
+ 
       <div class="links-wrap">
         <a href="https://x.com/kintsuuOsaka_sg"
            target="_blank" rel="noopener noreferrer"
-           class="link-btn x">
-          𝕏 @kintsuuOsaka_sg
-        </a>
+           class="link-btn">𝕏 @kintsuuOsaka_sg</a>
         <a href="https://www.instagram.com/kintsuosaka_sg"
            target="_blank" rel="noopener noreferrer"
-           class="link-btn insta">
-          📷 kintsuosaka_sg
-        </a>
+           class="link-btn">📷 kintsuosaka_sg</a>
         <a href="https://www.kindai.ac.jp/tsushin/for-students/baishin/learning/osaka.html"
            target="_blank" rel="noopener noreferrer"
-           class="link-btn univ">
-          🎓 近大公式 大阪府学習会
-        </a>
+           class="link-btn">🎓 梅信学習会ページ</a>
       </div>
     </section>
  
     <footer>
       <p>© 2026 近畿大学通信教育部 大阪府学習会</p>
-      <p style="margin-top:6px;font-size:11px;">本サイトは学習会による自主運営サイトです</p>
+      <p style="margin-top:5px;">本サイトは学習会による自主運営サイトです</p>
     </footer>
  
   </div>
  
 </body>
 </html>
- 
